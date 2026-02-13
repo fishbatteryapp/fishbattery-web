@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fishbattery Sign In</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <main class="page narrow">
+      <header class="topbar card">
+        <div class="top-left">
+          <a class="brand" href="./index.html">Fishbattery</a>
+          <nav class="top-links">
+            <a href="./download.html">Download</a>
+          </nav>
+        </div>
+        <div id="authActions" class="actions"></div>
+      </header>
+
+      <header class="card">
+        <p class="kicker">Fishbattery account</p>
+        <h1>Sign in</h1>
+        <p class="lead">Sign in to manage your account and premium plan.</p>
+      </header>
+
+      <section class="card stack">
+        <h2>Credentials</h2>
+        <div class="actions">
+          <button id="modeLogin" class="btn btn-primary">Sign in</button>
+          <button id="modeRegister" class="btn">Create account</button>
+        </div>
+        <label class="field">
+          <span>Email</span>
+          <input id="email" type="email" placeholder="you@example.com" />
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input id="password" type="password" placeholder="Password" />
+        </label>
+        <label id="displayNameField" class="field hidden">
+          <span>Display name</span>
+          <input id="displayName" type="text" placeholder="Your display name" />
+        </label>
+        <div class="actions">
+          <button id="submitAuth" class="btn btn-primary">Continue</button>
+          <a class="btn" href="./index.html">Back home</a>
+        </div>
+        <p id="statusText" class="hint">Enter your details to continue.</p>
+      </section>
+    </main>
+    <script src="./site-nav.js"></script>
+    <script src="./login.js"></script>
+  </body>
+</html>

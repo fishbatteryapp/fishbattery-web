@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fishbattery Upgrade</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <main class="page narrow">
+      <header class="topbar card">
+        <div class="top-left">
+          <a class="brand" href="./index.html">Fishbattery</a>
+          <nav class="top-links">
+            <a href="./download.html">Download</a>
+          </nav>
+        </div>
+        <div id="authActions" class="actions"></div>
+      </header>
+
+      <header class="card">
+        <p class="kicker">Fishbattery account</p>
+        <h1>Upgrade to Premium</h1>
+        <p class="lead">Manage your plan with your signed-in account.</p>
+      </header>
+
+      <section class="card stack">
+        <h2>Your account</h2>
+        <p id="sessionSummary" class="hint">Checking session...</p>
+        <div class="actions">
+          <button id="checkSession" class="btn">Refresh account</button>
+          <button id="checkSub" class="btn">Refresh plan</button>
+          <button id="signOut" class="btn">Sign out</button>
+        </div>
+      </section>
+
+      <section class="card stack">
+        <h2>Billing</h2>
+        <div class="actions">
+          <button id="upgradeMonthly" class="btn btn-primary">Upgrade monthly</button>
+          <button id="upgradeYearly" class="btn btn-primary">Upgrade yearly</button>
+          <button id="openPortal" class="btn">Manage billing</button>
+        </div>
+        <p id="statusText" class="hint">Pick a plan or open billing settings.</p>
+      </section>
+    </main>
+    <script src="./site-nav.js"></script>
+    <script src="./upgrade.js"></script>
+  </body>
+</html>

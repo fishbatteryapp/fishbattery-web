@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Settings - Fishbattery</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <main class="page narrow">
+      <header class="topbar card">
+        <div class="top-left">
+          <a class="brand" href="./index.html">Fishbattery</a>
+          <nav class="top-links">
+            <a href="./download.html">Download</a>
+          </nav>
+        </div>
+        <div id="authActions" class="actions"></div>
+      </header>
+
+      <header class="card">
+        <p class="kicker">Account settings</p>
+        <h1>Your profile</h1>
+        <p class="lead">Update your display name and profile picture.</p>
+      </header>
+
+      <section class="card stack">
+        <h2>Profile</h2>
+        <p id="accountSummary" class="hint">Loading account...</p>
+        <label class="field">
+          <span>Email</span>
+          <input id="email" type="email" disabled />
+        </label>
+        <label class="field">
+          <span>Display name</span>
+          <input id="displayName" type="text" maxlength="32" placeholder="Display name" />
+        </label>
+        <div class="field">
+          <span>Profile picture</span>
+          <div class="actions">
+            <input id="avatarFile" type="file" accept="image/*" />
+            <button id="clearAvatar" class="btn" type="button">Clear picture</button>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="saveProfile" class="btn btn-primary" type="button">Save changes</button>
+          <a class="btn" href="./upgrade.html">Billing and premium</a>
+        </div>
+        <p id="statusText" class="hint">Make your changes, then click Save changes.</p>
+      </section>
+    </main>
+    <script src="./site-nav.js"></script>
+    <script src="./account.js"></script>
+  </body>
+</html>
