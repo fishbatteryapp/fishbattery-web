@@ -52,15 +52,34 @@
     return parsed;
   }
 
+  function buildCheckoutUrls() {
+    const base = `${window.location.origin}${window.location.pathname.replace(/\/[^/]*$/, "")}`;
+    const upgradeUrl = `${base}/upgrade.html`;
+    return {
+      successUrl: `${upgradeUrl}?checkout=success`,
+      cancelUrl: `${upgradeUrl}?checkout=cancel`,
+      returnUrl: upgradeUrl
+    };
+  }
+
   async function request(path, init) {
     let lastError = new Error("Request failed");
     for (const base of getApiBases()) {
       try {
         const response = await fetch(`${base}${path}`, init);
+        // If we reached the API and got an HTTP response, do not silently hop to another base.
+        // Surface the real server error (e.g. 400 misconfiguration) to the user.
         const parsed = await parseResponse(response);
         localStorage.setItem("fishbattery.apiBaseResolved", base);
         return parsed;
       } catch (error) {
+        const msg = String((error && error.message) || error || "").toLowerCase();
+        const isNetworkError =
+          msg.includes("failed to fetch") ||
+          msg.includes("name_not_resolved") ||
+          msg.includes("err_connection_refused") ||
+          msg.includes("networkerror");
+        if (!isNetworkError) throw (error instanceof Error ? error : new Error(String(error)));
         lastError = error instanceof Error ? error : new Error(String(error));
       }
     }
@@ -112,13 +131,18 @@
       return;
     }
     write("Opening secure checkout...");
+    const urls = buildCheckoutUrls();
     const data = await request("/v1/billing/checkout-session", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ plan })
+      body: JSON.stringify({
+        plan,
+        successUrl: urls.successUrl,
+        cancelUrl: urls.cancelUrl
+      })
     });
     if (data && data.url) window.location.href = data.url;
     else write("Could not open checkout. Please try again.");
@@ -131,13 +155,14 @@
       return;
     }
     write("Opening billing settings...");
+    const urls = buildCheckoutUrls();
     const data = await request("/v1/billing/portal-session", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({})
+      body: JSON.stringify({ returnUrl: urls.returnUrl })
     });
     if (data && data.url) window.location.href = data.url;
     else write("Could not open billing settings. Please try again.");
