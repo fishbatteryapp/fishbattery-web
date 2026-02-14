@@ -27,7 +27,7 @@
         </p>
         <div class="actions hero-actions">
           <a id="windowsDownload" class="btn btn-primary" href="#" target="_blank" rel="noreferrer">Download for Windows</a>
-          <a id="releaseNotes" class="btn" href="#" target="_blank" rel="noreferrer">Release notes</a>
+          <a id="releaseNotes" class="btn" href="#" rel="noreferrer">Release notes</a>
         </div>
         <p id="downloadSummary" class="hint download-summary">Loading release information...</p>
       </header>
@@ -137,6 +137,22 @@
         <img id="downloadLightboxImage" alt="" />
         <button id="downloadLightboxClose" class="download-lightbox-close" type="button" aria-label="Close image preview">&times;</button>
       </div>
+    </div>
+    <div id="releaseNotesModal" class="release-notes-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="releaseNotesTitle">
+      <div class="release-notes-backdrop"></div>
+      <article class="release-notes-panel">
+        <header class="release-notes-header">
+          <div>
+            <p class="kicker">Latest release</p>
+            <h2 id="releaseNotesTitle">Release notes</h2>
+            <p id="releaseNotesMeta" class="hint">Loading...</p>
+          </div>
+          <button id="releaseNotesClose" class="release-notes-close" type="button" aria-label="Close release notes">&times;</button>
+        </header>
+        <div id="releaseNotesBody" class="release-notes-body">
+          <p class="hint">Loading release notes...</p>
+        </div>
+      </article>
     </div>
     <script src="./site-nav.js"></script>
     <script src="./download.js"></script>

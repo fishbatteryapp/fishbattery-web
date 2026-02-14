@@ -76,6 +76,13 @@
         localStorage.setItem("fishbattery.apiBaseResolved", base);
         return data;
       } catch (error) {
+        const msg = String((error && error.message) || error || "").toLowerCase();
+        const isNetworkError =
+          msg.includes("failed to fetch") ||
+          msg.includes("name_not_resolved") ||
+          msg.includes("err_connection_refused") ||
+          msg.includes("networkerror");
+        if (!isNetworkError) throw (error instanceof Error ? error : new Error(String(error)));
         lastError = error instanceof Error ? error : new Error(String(error));
       }
     }
