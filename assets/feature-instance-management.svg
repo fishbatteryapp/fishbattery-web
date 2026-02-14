@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="gShield" x1="21" y1="16" x2="43" y2="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A5F0DE"/>
+      <stop offset="1" stop-color="#54C4A1"/>
+    </linearGradient>
+  </defs>
+  <path d="M32 13.5 46.5 18v12.3c0 10.2-6.1 18.8-14.5 22.9-8.4-4.1-14.5-12.7-14.5-22.9V18L32 13.5Z" fill="url(#gShield)" stroke="#1F6B55" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="m25.6 32.5 4.3 4.3 8.5-8.5" stroke="#104A37" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -169,7 +169,7 @@
   function userErrorMessage(error) {
     const message = error instanceof Error ? error.message : String(error);
     const lower = message.toLowerCase();
-    if (lower.includes("already in use")) return "That email or display name is already in use.";
+    if (lower.includes("already in use")) return "That email or username is already in use.";
     if (lower.includes("invalid credentials")) return "Wrong email or password. Please try again.";
     if (lower.includes("invalid authenticator code")) return "Authenticator code is invalid. Try the latest 6-digit code.";
     if (lower.includes("2fa challenge is invalid or expired")) return "Your 2FA challenge expired. Sign in again.";
@@ -197,7 +197,7 @@
       }
       if (mode === "register") {
         if (!displayName) {
-          write("Please choose a display name.");
+          write("Please choose a unique username.");
           return;
         }
         if (password !== confirmPassword) {

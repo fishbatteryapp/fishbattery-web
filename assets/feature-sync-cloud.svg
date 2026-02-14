@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="gSync" x1="17" y1="20" x2="47" y2="45" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D7F3FF"/>
+      <stop offset="1" stop-color="#8FC6DE"/>
+    </linearGradient>
+  </defs>
+  <path d="M20 42.5h23.3c6.2 0 10.7-4.4 10.7-9.9 0-5.4-4.2-9.6-9.7-10-1.4-5.9-6.8-10-13.2-10-7.3 0-13.4 5.3-14.4 12.3-4.5.8-7.7 4.6-7.7 9.2 0 4.7 3.8 8.4 8.7 8.4Z" fill="url(#gSync)" stroke="#2E5D73" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M24.2 30.9h12.3m0 0-2.5-2.5m2.5 2.5-2.5 2.5" stroke="#1E7EA5" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M39.8 36.1H27.5m0 0 2.5-2.5m-2.5 2.5 2.5 2.5" stroke="#1E7EA5" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

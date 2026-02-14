@@ -22,7 +22,7 @@
       <header class="card">
         <p class="kicker">Account settings</p>
         <h1>Your profile</h1>
-        <p class="lead">Update your display name and profile picture.</p>
+        <p class="lead">Update your unique username and profile picture.</p>
       </header>
 
       <section class="card stack">
@@ -33,14 +33,23 @@
           <input id="email" type="email" disabled />
         </label>
         <label class="field">
-          <span>Display name</span>
-          <input id="displayName" type="text" maxlength="32" placeholder="Display name" />
+          <span>Username (unique)</span>
+          <input id="displayName" type="text" maxlength="32" placeholder="Your unique username" />
         </label>
         <div class="field">
           <span>Profile picture</span>
           <div class="actions">
             <input id="avatarFile" type="file" accept="image/*" />
             <button id="clearAvatar" class="btn" type="button">Clear picture</button>
+          </div>
+          <div id="avatarPreviewWrap" class="avatar-preview-wrap hidden">
+            <div id="avatarPreviewFrame" class="avatar-preview-frame">
+              <img id="avatarPreviewImage" alt="Avatar preview" />
+            </div>
+            <div class="avatar-preview-controls">
+              <p class="hint">Drag image to reposition. Scroll to zoom.</p>
+              <button id="avatarResetView" class="btn" type="button">Reset view</button>
+            </div>
           </div>
         </div>
         <div class="actions">

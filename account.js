@@ -4,6 +4,10 @@
   const displayNameInput = document.getElementById("displayName");
   const avatarFileInput = document.getElementById("avatarFile");
   const clearAvatarBtn = document.getElementById("clearAvatar");
+  const avatarPreviewWrap = document.getElementById("avatarPreviewWrap");
+  const avatarPreviewFrame = document.getElementById("avatarPreviewFrame");
+  const avatarPreviewImage = document.getElementById("avatarPreviewImage");
+  const avatarResetViewBtn = document.getElementById("avatarResetView");
   const saveBtn = document.getElementById("saveProfile");
   const statusText = document.getElementById("statusText");
   const passwordSection = document.getElementById("passwordSection");
@@ -42,6 +46,18 @@
   }
 
   let pendingAvatarData = null;
+  let avatarPreviewSource = null;
+  let avatarNaturalW = 0;
+  let avatarNaturalH = 0;
+  let avatarScalePct = 100;
+  let avatarOffsetXPct = 0;
+  let avatarOffsetYPct = 0;
+  let avatarDragging = false;
+  let avatarDragPointerId = null;
+  let avatarDragStartX = 0;
+  let avatarDragStartY = 0;
+  let avatarDragStartOffsetX = 0;
+  let avatarDragStartOffsetY = 0;
   let clearAvatar = false;
   let canChangePassword = false;
   let twoFactorEnabled = false;
@@ -50,6 +66,10 @@
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.6-6 9.5-6 9.5 6 9.5 6-3.6 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"></circle></svg>';
   const eyeClosedSvg =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M6.7 6.8C4.3 8.3 2.8 10.7 2.5 12c.6 2.2 4.1 6 9.5 6 2 0 3.8-.5 5.2-1.3"></path><path d="M14.5 6.3c4.1.9 6.6 4.3 7 5.7-.3 1-1.3 2.7-2.9 4.1"></path></svg>';
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
 
   function setPasswordToggleVisual(btn, visible) {
     btn.innerHTML = visible ? eyeOpenSvg : eyeClosedSvg;
@@ -67,6 +87,115 @@
 
   function setTwofaStatus(message) {
     if (twofaStatusText) twofaStatusText.textContent = String(message || "");
+  }
+
+  function resetAvatarTransform() {
+    avatarScalePct = 100;
+    avatarOffsetXPct = 0;
+    avatarOffsetYPct = 0;
+  }
+
+  function getAvatarPreviewLayout() {
+    const frame = avatarPreviewWrap?.querySelector(".avatar-preview-frame");
+    const frameW = Math.max(1, Number(frame?.clientWidth || 140));
+    const frameH = Math.max(1, Number(frame?.clientHeight || 140));
+    const srcW = Math.max(1, avatarNaturalW || 1);
+    const srcH = Math.max(1, avatarNaturalH || 1);
+    const scale = Math.max(0.5, Math.min(2.5, avatarScalePct / 100));
+    const coverScale = Math.max(frameW / srcW, frameH / srcH) * scale;
+    const displayW = srcW * coverScale;
+    const displayH = srcH * coverScale;
+    const maxShiftX = Math.max(0, (displayW - frameW) / 2);
+    const maxShiftY = Math.max(0, (displayH - frameH) / 2);
+    const shiftX = (avatarOffsetXPct / 100) * maxShiftX;
+    const shiftY = (avatarOffsetYPct / 100) * maxShiftY;
+    const left = (frameW - displayW) / 2 + shiftX;
+    const top = (frameH - displayH) / 2 + shiftY;
+    return { left, top, width: displayW, height: displayH };
+  }
+
+  function renderAvatarPreviewTransform() {
+    if (!avatarPreviewImage || !avatarPreviewSource || !avatarNaturalW || !avatarNaturalH) return;
+    const layout = getAvatarPreviewLayout();
+    avatarPreviewImage.style.left = `${layout.left}px`;
+    avatarPreviewImage.style.top = `${layout.top}px`;
+    avatarPreviewImage.style.width = `${layout.width}px`;
+    avatarPreviewImage.style.height = `${layout.height}px`;
+  }
+
+  function getAvatarShiftBoundsPx() {
+    const frame = avatarPreviewFrame;
+    const frameW = Math.max(1, Number(frame?.clientWidth || 140));
+    const frameH = Math.max(1, Number(frame?.clientHeight || 140));
+    const srcW = Math.max(1, avatarNaturalW || 1);
+    const srcH = Math.max(1, avatarNaturalH || 1);
+    const scale = Math.max(0.5, Math.min(2.5, avatarScalePct / 100));
+    const coverScale = Math.max(frameW / srcW, frameH / srcH) * scale;
+    const displayW = srcW * coverScale;
+    const displayH = srcH * coverScale;
+    return {
+      maxShiftX: Math.max(0, (displayW - frameW) / 2),
+      maxShiftY: Math.max(0, (displayH - frameH) / 2)
+    };
+  }
+
+  function setAvatarPreviewSource(dataUrl) {
+    avatarPreviewSource = dataUrl ? String(dataUrl) : null;
+    if (!avatarPreviewSource) {
+      avatarNaturalW = 0;
+      avatarNaturalH = 0;
+      if (avatarPreviewImage) avatarPreviewImage.removeAttribute("src");
+      if (avatarPreviewWrap) avatarPreviewWrap.classList.add("hidden");
+      return;
+    }
+    if (avatarPreviewWrap) avatarPreviewWrap.classList.remove("hidden");
+    if (!avatarPreviewImage) return;
+    avatarPreviewImage.onload = () => {
+      avatarNaturalW = Number(avatarPreviewImage.naturalWidth || 0);
+      avatarNaturalH = Number(avatarPreviewImage.naturalHeight || 0);
+      renderAvatarPreviewTransform();
+    };
+    avatarPreviewImage.onerror = () => {
+      avatarNaturalW = 0;
+      avatarNaturalH = 0;
+    };
+    avatarPreviewImage.src = avatarPreviewSource;
+  }
+
+  async function imageFromDataUrl(dataUrl) {
+    return await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Could not load image data"));
+      img.src = dataUrl;
+    });
+  }
+
+  async function buildTransformedAvatarDataUrl(originalDataUrl) {
+    const src = await imageFromDataUrl(originalDataUrl);
+    const out = 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = out;
+    canvas.height = out;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return originalDataUrl;
+
+    const srcW = Math.max(1, Number(src.naturalWidth || src.width || 1));
+    const srcH = Math.max(1, Number(src.naturalHeight || src.height || 1));
+    const scale = Math.max(0.5, Math.min(2.5, avatarScalePct / 100));
+    const coverScale = Math.max(out / srcW, out / srcH) * scale;
+    const drawW = srcW * coverScale;
+    const drawH = srcH * coverScale;
+    const maxShiftX = Math.max(0, (drawW - out) / 2);
+    const maxShiftY = Math.max(0, (drawH - out) / 2);
+    const shiftX = (avatarOffsetXPct / 100) * maxShiftX;
+    const shiftY = (avatarOffsetYPct / 100) * maxShiftY;
+    const drawX = (out - drawW) / 2 + shiftX;
+    const drawY = (out - drawH) / 2 + shiftY;
+
+    ctx.clearRect(0, 0, out, out);
+    ctx.drawImage(src, drawX, drawY, drawW, drawH);
+    return canvas.toDataURL("image/png");
   }
 
   function hideTwofaSetupPanel() {
@@ -181,6 +310,10 @@
     emailInput.value = account.email || "";
     displayNameInput.value = account.displayName || "";
     summary.textContent = `Signed in as ${account.displayName || "User"}`;
+    if (!pendingAvatarData && !clearAvatar) {
+      resetAvatarTransform();
+      setAvatarPreviewSource(account.avatarUrl || null);
+    }
     if (passwordSection) passwordSection.classList.toggle("hidden", !canChangePassword);
     if (!canChangePassword) {
       setPasswordStatus("Password change is unavailable for this account.");
@@ -196,6 +329,8 @@
     clearAvatar = true;
     pendingAvatarData = null;
     avatarFileInput.value = "";
+    resetAvatarTransform();
+    setAvatarPreviewSource(null);
     setStatus("Profile picture will be removed when you save.");
   });
 
@@ -205,17 +340,75 @@
     try {
       pendingAvatarData = await readAsDataUrl(file);
       clearAvatar = false;
+      resetAvatarTransform();
+      setAvatarPreviewSource(pendingAvatarData);
       setStatus(`Selected new profile picture: ${file.name}`);
     } catch {
       setStatus("Could not load the selected image. Please try another file.");
     }
   });
 
+  avatarResetViewBtn?.addEventListener("click", () => {
+    resetAvatarTransform();
+    renderAvatarPreviewTransform();
+  });
+
+  avatarPreviewFrame?.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    if (!avatarPreviewSource || !avatarNaturalW || !avatarNaturalH) return;
+    avatarDragging = true;
+    avatarDragPointerId = event.pointerId;
+    avatarDragStartX = event.clientX;
+    avatarDragStartY = event.clientY;
+    avatarDragStartOffsetX = avatarOffsetXPct;
+    avatarDragStartOffsetY = avatarOffsetYPct;
+    avatarPreviewFrame.setPointerCapture(event.pointerId);
+    avatarPreviewFrame.classList.add("dragging");
+  });
+
+  avatarPreviewFrame?.addEventListener("pointermove", (event) => {
+    if (!avatarDragging || avatarDragPointerId !== event.pointerId) return;
+    const { maxShiftX, maxShiftY } = getAvatarShiftBoundsPx();
+    const deltaX = event.clientX - avatarDragStartX;
+    const deltaY = event.clientY - avatarDragStartY;
+    avatarOffsetXPct =
+      maxShiftX > 0 ? clamp(avatarDragStartOffsetX + (deltaX * 100) / maxShiftX, -100, 100) : 0;
+    avatarOffsetYPct =
+      maxShiftY > 0 ? clamp(avatarDragStartOffsetY + (deltaY * 100) / maxShiftY, -100, 100) : 0;
+    renderAvatarPreviewTransform();
+  });
+
+  const endAvatarDrag = (event) => {
+    if (avatarDragPointerId !== event.pointerId) return;
+    avatarDragging = false;
+    avatarDragPointerId = null;
+    avatarPreviewFrame?.classList.remove("dragging");
+    try {
+      avatarPreviewFrame?.releasePointerCapture(event.pointerId);
+    } catch {
+      // ignore release errors
+    }
+  };
+
+  avatarPreviewFrame?.addEventListener("pointerup", endAvatarDrag);
+  avatarPreviewFrame?.addEventListener("pointercancel", endAvatarDrag);
+
+  avatarPreviewFrame?.addEventListener(
+    "wheel",
+    (event) => {
+      if (!avatarPreviewSource || !avatarNaturalW || !avatarNaturalH) return;
+      event.preventDefault();
+      avatarScalePct = clamp(avatarScalePct - event.deltaY * 0.06, 50, 250);
+      renderAvatarPreviewTransform();
+    },
+    { passive: false }
+  );
+
   saveBtn.addEventListener("click", async () => {
     try {
       const displayName = displayNameInput.value.trim();
       if (!displayName) {
-        setStatus("Please enter a display name.");
+        setStatus("Please enter a unique username.");
         return;
       }
 
@@ -223,7 +416,7 @@
       if (clearAvatar) {
         body.avatarUrl = null;
       } else if (pendingAvatarData) {
-        body.avatarUrl = pendingAvatarData;
+        body.avatarUrl = await buildTransformedAvatarDataUrl(pendingAvatarData);
       }
 
       setStatus("Saving changes...");
@@ -241,12 +434,13 @@
       clearAvatar = false;
       pendingAvatarData = null;
       avatarFileInput.value = "";
+      resetAvatarTransform();
       setStatus("Saved successfully.");
       await loadSession();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (/display name already in use/i.test(message)) {
-        setStatus("That display name is already taken. Please choose another.");
+      if (/(display name|username) already in use/i.test(message)) {
+        setStatus("That username is already taken. Please choose another.");
       } else {
         setStatus("Could not save changes right now. Please try again.");
       }
