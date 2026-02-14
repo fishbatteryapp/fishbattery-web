@@ -12,6 +12,22 @@
   const confirmNewPasswordInput = document.getElementById("confirmNewPassword");
   const changePasswordBtn = document.getElementById("changePassword");
   const passwordStatusText = document.getElementById("passwordStatusText");
+  const passwordToggleButtons = Array.from(document.querySelectorAll("[data-password-toggle]"));
+  const twofaSummary = document.getElementById("twofaSummary");
+  const twofaStatusText = document.getElementById("twofaStatusText");
+  const twofaStartBtn = document.getElementById("twofaStartBtn");
+  const twofaDisableBtn = document.getElementById("twofaDisableBtn");
+  const twofaSetupPanel = document.getElementById("twofaSetupPanel");
+  const twofaQrImage = document.getElementById("twofaQrImage");
+  const twofaManualKey = document.getElementById("twofaManualKey");
+  const twofaVerifyCode = document.getElementById("twofaVerifyCode");
+  const twofaConfirmBtn = document.getElementById("twofaConfirmBtn");
+  const twofaCancelBtn = document.getElementById("twofaCancelBtn");
+  const twofaDisablePanel = document.getElementById("twofaDisablePanel");
+  const twofaDisablePassword = document.getElementById("twofaDisablePassword");
+  const twofaDisableCode = document.getElementById("twofaDisableCode");
+  const twofaDisableConfirmBtn = document.getElementById("twofaDisableConfirmBtn");
+  const twofaDisableCancelBtn = document.getElementById("twofaDisableCancelBtn");
 
   const API_BASES = [
     "https://api.fishbattery.app",
@@ -28,6 +44,18 @@
   let pendingAvatarData = null;
   let clearAvatar = false;
   let canChangePassword = false;
+  let twoFactorEnabled = false;
+
+  const eyeOpenSvg =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.6-6 9.5-6 9.5 6 9.5 6-3.6 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"></circle></svg>';
+  const eyeClosedSvg =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M6.7 6.8C4.3 8.3 2.8 10.7 2.5 12c.6 2.2 4.1 6 9.5 6 2 0 3.8-.5 5.2-1.3"></path><path d="M14.5 6.3c4.1.9 6.6 4.3 7 5.7-.3 1-1.3 2.7-2.9 4.1"></path></svg>';
+
+  function setPasswordToggleVisual(btn, visible) {
+    btn.innerHTML = visible ? eyeOpenSvg : eyeClosedSvg;
+    btn.setAttribute("aria-pressed", visible ? "true" : "false");
+    btn.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+  }
 
   function setStatus(message) {
     statusText.textContent = String(message || "");
@@ -35,6 +63,55 @@
 
   function setPasswordStatus(message) {
     if (passwordStatusText) passwordStatusText.textContent = String(message || "");
+  }
+
+  function setTwofaStatus(message) {
+    if (twofaStatusText) twofaStatusText.textContent = String(message || "");
+  }
+
+  function hideTwofaSetupPanel() {
+    if (twofaSetupPanel) twofaSetupPanel.classList.add("hidden");
+    if (twofaQrImage) twofaQrImage.removeAttribute("src");
+    if (twofaManualKey) twofaManualKey.textContent = "";
+    if (twofaVerifyCode) twofaVerifyCode.value = "";
+  }
+
+  function hideTwofaDisablePanel() {
+    if (twofaDisablePanel) twofaDisablePanel.classList.add("hidden");
+    if (twofaDisablePassword) twofaDisablePassword.value = "";
+    if (twofaDisableCode) twofaDisableCode.value = "";
+  }
+
+  function renderTwofaUi() {
+    if (!passwordSection || passwordSection.classList.contains("hidden")) return;
+    if (twofaSummary) {
+      twofaSummary.textContent = twoFactorEnabled
+        ? "Authenticator app is enabled."
+        : "Add an authenticator app for optional 2-step verification at sign-in.";
+    }
+    if (twofaStartBtn) twofaStartBtn.classList.toggle("hidden", twoFactorEnabled);
+    if (twofaDisableBtn) twofaDisableBtn.classList.toggle("hidden", !twoFactorEnabled);
+  }
+
+  async function refreshTwofaStatus() {
+    if (!canChangePassword) return;
+    const status = await request("/v1/account/2fa/status", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    twoFactorEnabled = !!status?.enabled;
+    renderTwofaUi();
+  }
+
+  for (const btn of passwordToggleButtons) {
+    const inputId = String(btn.getAttribute("data-password-toggle") || "").trim();
+    const input = inputId ? document.getElementById(inputId) : null;
+    if (!input) continue;
+    setPasswordToggleVisual(btn, false);
+    btn.addEventListener("click", () => {
+      const visible = input.getAttribute("type") === "text";
+      input.setAttribute("type", visible ? "password" : "text");
+      setPasswordToggleVisual(btn, !visible);
+    });
   }
 
   async function parseResponse(response) {
@@ -109,6 +186,7 @@
       setPasswordStatus("Password change is unavailable for this account.");
     } else {
       setPasswordStatus("Use at least 8 characters.");
+      await refreshTwofaStatus();
     }
     localStorage.setItem("fishbattery.account", JSON.stringify(account));
     setStatus("You are signed in.");
@@ -228,6 +306,125 @@
           setPasswordStatus("Password change is unavailable for this account.");
         } else {
           setPasswordStatus("Could not update password right now. Please try again.");
+        }
+      }
+    });
+  }
+
+  if (twofaStartBtn) {
+    twofaStartBtn.addEventListener("click", async () => {
+      try {
+        hideTwofaDisablePanel();
+        setTwofaStatus("Preparing authenticator setup...");
+        const data = await request("/v1/account/2fa/setup/start", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({})
+        });
+        if (twofaQrImage) twofaQrImage.src = String(data?.qrDataUrl || "");
+        if (twofaManualKey) twofaManualKey.textContent = String(data?.manualCode || "");
+        if (twofaSetupPanel) twofaSetupPanel.classList.remove("hidden");
+        setTwofaStatus("Scan the QR code and enter the 6-digit code to confirm.");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (/only available for password-based accounts/i.test(message)) {
+          setTwofaStatus("Authenticator setup is available only for password-based accounts.");
+        } else {
+          setTwofaStatus("Could not start authenticator setup right now.");
+        }
+      }
+    });
+  }
+
+  if (twofaCancelBtn) {
+    twofaCancelBtn.addEventListener("click", () => {
+      hideTwofaSetupPanel();
+      setTwofaStatus("");
+    });
+  }
+
+  if (twofaConfirmBtn) {
+    twofaConfirmBtn.addEventListener("click", async () => {
+      try {
+        const code = String(twofaVerifyCode?.value || "").replace(/\s+/g, "");
+        if (!/^\d{6}$/.test(code)) {
+          setTwofaStatus("Please enter a valid 6-digit code.");
+          return;
+        }
+        setTwofaStatus("Enabling authenticator app...");
+        const data = await request("/v1/account/2fa/setup/confirm", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ code })
+        });
+        if (data?.accessToken) localStorage.setItem("fishbattery.token", data.accessToken);
+        if (data?.account) localStorage.setItem("fishbattery.account", JSON.stringify(data.account));
+        hideTwofaSetupPanel();
+        setTwofaStatus("Authenticator app enabled.");
+        await refreshTwofaStatus();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (/invalid authenticator code/i.test(message)) {
+          setTwofaStatus("That code is not valid. Try the latest code from your app.");
+        } else {
+          setTwofaStatus("Could not enable authenticator app right now.");
+        }
+      }
+    });
+  }
+
+  if (twofaDisableBtn) {
+    twofaDisableBtn.addEventListener("click", () => {
+      hideTwofaSetupPanel();
+      if (twofaDisablePanel) twofaDisablePanel.classList.remove("hidden");
+      setTwofaStatus("Confirm with your password and a current authenticator code.");
+    });
+  }
+
+  if (twofaDisableCancelBtn) {
+    twofaDisableCancelBtn.addEventListener("click", () => {
+      hideTwofaDisablePanel();
+      setTwofaStatus("");
+    });
+  }
+
+  if (twofaDisableConfirmBtn) {
+    twofaDisableConfirmBtn.addEventListener("click", async () => {
+      try {
+        const currentPassword = String(twofaDisablePassword?.value || "");
+        const code = String(twofaDisableCode?.value || "").replace(/\s+/g, "");
+        if (!currentPassword || !/^\d{6}$/.test(code)) {
+          setTwofaStatus("Enter your current password and a valid 6-digit code.");
+          return;
+        }
+        setTwofaStatus("Disabling authenticator app...");
+        const data = await request("/v1/account/2fa/disable", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ currentPassword, code })
+        });
+        if (data?.accessToken) localStorage.setItem("fishbattery.token", data.accessToken);
+        if (data?.account) localStorage.setItem("fishbattery.account", JSON.stringify(data.account));
+        hideTwofaDisablePanel();
+        setTwofaStatus("Authenticator app disabled.");
+        await refreshTwofaStatus();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (/current password is incorrect/i.test(message)) {
+          setTwofaStatus("Current password is incorrect.");
+        } else if (/invalid authenticator code/i.test(message)) {
+          setTwofaStatus("Authenticator code is invalid.");
+        } else {
+          setTwofaStatus("Could not disable authenticator app right now.");
         }
       }
     });

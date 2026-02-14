@@ -197,6 +197,14 @@ h2 {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.value-icon {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 0.6rem;
+  display: block;
+  opacity: 0.95;
+}
+
 .split {
   display: grid;
   gap: 1rem;
@@ -307,22 +315,29 @@ h2 {
   box-shadow: none;
   backdrop-filter: blur(4px);
   display: grid;
-  gap: 0.7rem;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "brand ."
+    "copy links";
+  gap: 0.5rem 1rem;
   margin-top: auto;
 }
 
 .legal-main {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem 1rem;
+  display: contents;
+}
+
+.legal-main > strong {
+  grid-area: brand;
 }
 
 .legal-links {
+  grid-area: links;
   display: flex;
   flex-wrap: wrap;
   gap: 0.8rem;
+  justify-self: end;
+  align-self: end;
 }
 
 .legal-links a {
@@ -335,6 +350,7 @@ h2 {
 }
 
 .legal-copy {
+  grid-area: copy;
   display: grid;
   gap: 0.2rem;
   font-size: 0.84rem;
@@ -504,6 +520,76 @@ h2 {
 .field span {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.password-input-wrap {
+  position: relative;
+}
+
+.password-input-wrap input {
+  padding-right: 2.9rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.45rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(89, 168, 219, 0.25);
+  border-radius: 999px;
+  background: rgba(9, 23, 37, 0.72);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  color: var(--text);
+  border-color: rgba(111, 211, 255, 0.55);
+}
+
+.password-toggle svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.twofa-block {
+  margin-top: 0.5rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(89, 168, 219, 0.22);
+  display: grid;
+  gap: 0.55rem;
+}
+
+.twofa-block h2 {
+  margin: 0;
+}
+
+.twofa-setup {
+  border: 1px solid rgba(89, 168, 219, 0.22);
+  border-radius: 12px;
+  background: rgba(8, 21, 35, 0.5);
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.twofa-qr {
+  width: 172px;
+  height: 172px;
+  border-radius: 10px;
+  border: 1px solid rgba(89, 168, 219, 0.3);
+  background: #fff;
+  padding: 6px;
 }
 
 input,
@@ -1111,6 +1197,19 @@ input[type="file"]::-webkit-file-upload-button:hover {
   .page.narrow {
     width: 100%;
     padding: 0.75rem;
+  }
+
+  .legal-footer {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "brand"
+      "links"
+      "copy";
+    gap: 0.7rem;
+  }
+
+  .legal-links {
+    justify-self: start;
   }
 
   .hero {

@@ -55,20 +55,74 @@
         <p class="hint">Change your account password.</p>
         <label class="field">
           <span>Current password</span>
-          <input id="currentPassword" type="password" placeholder="Current password" />
+          <div class="password-input-wrap">
+            <input id="currentPassword" type="password" placeholder="Current password" />
+            <button class="password-toggle" type="button" data-password-toggle="currentPassword" aria-label="Show password" aria-pressed="false"></button>
+          </div>
         </label>
         <label class="field">
           <span>New password</span>
-          <input id="newPassword" type="password" placeholder="New password" />
+          <div class="password-input-wrap">
+            <input id="newPassword" type="password" placeholder="New password" />
+            <button class="password-toggle" type="button" data-password-toggle="newPassword" aria-label="Show password" aria-pressed="false"></button>
+          </div>
         </label>
         <label class="field">
           <span>Confirm new password</span>
-          <input id="confirmNewPassword" type="password" placeholder="Confirm new password" />
+          <div class="password-input-wrap">
+            <input id="confirmNewPassword" type="password" placeholder="Confirm new password" />
+            <button class="password-toggle" type="button" data-password-toggle="confirmNewPassword" aria-label="Show password" aria-pressed="false"></button>
+          </div>
         </label>
         <div class="actions">
           <button id="changePassword" class="btn btn-primary" type="button">Update password</button>
         </div>
         <p id="passwordStatusText" class="hint">Use at least 8 characters.</p>
+
+        <div class="twofa-block">
+          <h2>Authenticator app (optional)</h2>
+          <p id="twofaSummary" class="hint">Loading authenticator status...</p>
+          <div class="actions">
+            <button id="twofaStartBtn" class="btn btn-primary" type="button">Set up authenticator app</button>
+            <button id="twofaDisableBtn" class="btn hidden" type="button">Disable authenticator app</button>
+          </div>
+
+          <div id="twofaSetupPanel" class="twofa-setup hidden">
+            <p class="hint">Scan this QR code in Authy, Google Authenticator, Microsoft Authenticator, or any TOTP app.</p>
+            <img id="twofaQrImage" class="twofa-qr" alt="Authenticator setup QR code" />
+            <p class="hint">Can’t scan? Use this setup key:</p>
+            <pre id="twofaManualKey" class="output"></pre>
+            <label class="field">
+              <span>6-digit code from your app</span>
+              <input id="twofaVerifyCode" type="text" inputmode="numeric" maxlength="6" placeholder="123456" />
+            </label>
+            <div class="actions">
+              <button id="twofaConfirmBtn" class="btn btn-primary" type="button">Enable 2FA</button>
+              <button id="twofaCancelBtn" class="btn" type="button">Cancel</button>
+            </div>
+          </div>
+
+          <div id="twofaDisablePanel" class="twofa-setup hidden">
+            <p class="hint">To disable 2FA, confirm your password and a current authenticator code.</p>
+            <label class="field">
+              <span>Current password</span>
+              <div class="password-input-wrap">
+                <input id="twofaDisablePassword" type="password" placeholder="Current password" />
+                <button class="password-toggle" type="button" data-password-toggle="twofaDisablePassword" aria-label="Show password" aria-pressed="false"></button>
+              </div>
+            </label>
+            <label class="field">
+              <span>6-digit code</span>
+              <input id="twofaDisableCode" type="text" inputmode="numeric" maxlength="6" placeholder="123456" />
+            </label>
+            <div class="actions">
+              <button id="twofaDisableConfirmBtn" class="btn btn-primary" type="button">Confirm disable</button>
+              <button id="twofaDisableCancelBtn" class="btn" type="button">Cancel</button>
+            </div>
+          </div>
+
+          <p id="twofaStatusText" class="hint"></p>
+        </div>
       </section>
 
       <footer class="card legal-footer">

@@ -5,6 +5,8 @@
   const displayNameField = document.getElementById("displayNameField");
   const confirmPasswordInput = document.getElementById("confirmPassword");
   const confirmPasswordField = document.getElementById("confirmPasswordField");
+  const twoFactorInput = document.getElementById("twoFactorCode");
+  const twoFactorField = document.getElementById("twoFactorField");
   const statusText = document.getElementById("statusText");
   const authHeading = document.getElementById("authHeading");
   const passwordSubtitle = document.getElementById("passwordSubtitle");
@@ -20,6 +22,7 @@
   ];
 
   let mode = "login";
+  let pendingTwoFactorChallenge = "";
 
   function write(value) {
     statusText.textContent = String(value || "");
@@ -30,6 +33,9 @@
     const register = mode === "register";
     displayNameField.classList.toggle("hidden", !register);
     confirmPasswordField.classList.toggle("hidden", !register);
+    twoFactorField.classList.add("hidden");
+    pendingTwoFactorChallenge = "";
+    if (twoFactorInput) twoFactorInput.value = "";
     modeLoginBtn.classList.toggle("btn-primary", !register);
     modeRegisterBtn.classList.toggle("btn-primary", register);
     modeLoginBtn.classList.toggle("btn", register);
@@ -165,6 +171,8 @@
     const lower = message.toLowerCase();
     if (lower.includes("already in use")) return "That email or display name is already in use.";
     if (lower.includes("invalid credentials")) return "Wrong email or password. Please try again.";
+    if (lower.includes("invalid authenticator code")) return "Authenticator code is invalid. Try the latest 6-digit code.";
+    if (lower.includes("2fa challenge is invalid or expired")) return "Your 2FA challenge expired. Sign in again.";
     if (lower.includes("failed to fetch") || lower.includes("name_not_resolved") || lower.includes("network")) {
       return "Cannot reach the server right now. Please try again in a minute.";
     }
@@ -199,13 +207,39 @@
       }
       write(mode === "register" ? "Creating your account..." : "Signing you in...");
 
-      const route = mode === "register" ? "/v1/auth/register" : "/v1/auth/login";
-      const body = mode === "register" ? { email, password, displayName } : { email, password };
-      const data = await request(route, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
+      let data;
+      if (mode === "register") {
+        data = await request("/v1/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, displayName })
+        });
+      } else if (pendingTwoFactorChallenge) {
+        const code = String(twoFactorInput?.value || "").replace(/\s+/g, "");
+        if (!/^\d{6}$/.test(code)) {
+          write("Enter a valid 6-digit authenticator code.");
+          return;
+        }
+        data = await request("/v1/auth/login/2fa", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ challengeToken: pendingTwoFactorChallenge, code })
+        });
+      } else {
+        data = await request("/v1/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        if (data?.requiresTwoFactor && data?.challengeToken) {
+          pendingTwoFactorChallenge = String(data.challengeToken);
+          twoFactorField.classList.remove("hidden");
+          submitBtn.textContent = "Verify code";
+          write("Enter your 6-digit authenticator code to finish signing in.");
+          twoFactorInput?.focus();
+          return;
+        }
+      }
 
       if (!data?.accessToken) throw new Error("Missing session token");
       localStorage.setItem("fishbattery.token", data.accessToken);
@@ -222,6 +256,13 @@
   passwordInput.addEventListener("keydown", (event) => {
     if (event.key !== "Enter") return;
     if (mode !== "login") return;
+    event.preventDefault();
+    void submitAuth();
+  });
+
+  twoFactorInput?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    if (!pendingTwoFactorChallenge) return;
     event.preventDefault();
     void submitAuth();
   });
