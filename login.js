@@ -170,7 +170,7 @@
     return "Could not complete authentication right now. Please try again.";
   }
 
-  submitBtn.addEventListener("click", async () => {
+  async function submitAuth() {
     try {
       const email = emailInput.value.trim();
       const password = passwordInput.value;
@@ -208,6 +208,15 @@
     } catch (error) {
       write(userErrorMessage(error));
     }
+  }
+
+  submitBtn.addEventListener("click", submitAuth);
+
+  passwordInput.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    if (mode !== "login") return;
+    event.preventDefault();
+    void submitAuth();
   });
 
   googleAuthBtn.addEventListener("click", async () => {

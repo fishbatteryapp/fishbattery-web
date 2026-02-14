@@ -50,6 +50,27 @@
         <p id="statusText" class="hint">Make your changes, then click Save changes.</p>
       </section>
 
+      <section id="passwordSection" class="card stack hidden">
+        <h2>Security</h2>
+        <p class="hint">Change your account password.</p>
+        <label class="field">
+          <span>Current password</span>
+          <input id="currentPassword" type="password" placeholder="Current password" />
+        </label>
+        <label class="field">
+          <span>New password</span>
+          <input id="newPassword" type="password" placeholder="New password" />
+        </label>
+        <label class="field">
+          <span>Confirm new password</span>
+          <input id="confirmNewPassword" type="password" placeholder="Confirm new password" />
+        </label>
+        <div class="actions">
+          <button id="changePassword" class="btn btn-primary" type="button">Update password</button>
+        </div>
+        <p id="passwordStatusText" class="hint">Use at least 8 characters.</p>
+      </section>
+
       <footer class="card legal-footer">
         <div class="legal-main">
           <strong>Fishbattery Launcher</strong>
@@ -62,7 +83,7 @@
         </div>
         <div class="legal-copy">
           <span>Contact: <a href="mailto:support@fishbattery.app">support@fishbattery.app</a></span>
-          <span>Based in Denmark • © Fishbattery</span>
+          <span>Based in Denmark &bull; &copy; Fishbattery</span>
           <span>Not affiliated with Mojang or Microsoft.</span>
         </div>
       </footer>
