@@ -42,6 +42,18 @@
     if (kickerEl) kickerEl.textContent = `Sponsored • ${ad.media}`;
   }
 
+  function tryRenderAdsenseSlot(slot) {
+    const adElement = slot.querySelector("ins.adsbygoogle");
+    if (!adElement) return false;
+    if (adElement.getAttribute("data-adsbygoogle-status")) return true;
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async function loadFeed() {
     for (const url of FEED_URLS) {
       try {
@@ -59,9 +71,16 @@
   }
 
   (async () => {
+    const slotsNeedingFallback = [];
+    for (const slot of slots) {
+      const rendered = tryRenderAdsenseSlot(slot);
+      if (!rendered) slotsNeedingFallback.push(slot);
+    }
+
+    if (!slotsNeedingFallback.length) return;
     const ads = await loadFeed();
     if (!ads.length) return;
-    for (const slot of slots) {
+    for (const slot of slotsNeedingFallback) {
       const placement = String(slot.getAttribute("data-ad-placement") || "").trim();
       if (!placement) continue;
       const ad = pickAdForPlacement(ads, placement);
