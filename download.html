@@ -37,24 +37,27 @@
         <h2>See how Fishbattery looks before you install</h2>
         <p class="hint">A clean home view, fast instance setup, and built-in theme control.</p>
 
-        <figure class="download-shot-main">
-          <img src="./assets/launcher front page screenshot.png" alt="Fishbattery launcher home screen preview" loading="lazy" />
-          <figcaption>Home view with quick actions and live logs.</figcaption>
-        </figure>
-
         <div class="download-shot-grid">
-          <figure class="download-shot">
-            <img src="./assets/Launcher create modrinth preview.png" alt="Create instance from Modrinth preview" loading="lazy" />
-            <figcaption>Import and create from Modrinth in a few clicks.</figcaption>
-          </figure>
-          <figure class="download-shot">
-            <img src="./assets/Launcher create pvp ready preview.png" alt="Create PVP-ready setup preview" loading="lazy" />
-            <figcaption>Start from a pre-tuned PVP-ready setup.</figcaption>
-          </figure>
-          <figure class="download-shot">
-            <img src="./assets/Launcher theme settings preview.png" alt="Theme settings preview" loading="lazy" />
-            <figcaption>Customize theme, accents, and interface style.</figcaption>
-          </figure>
+          <div class="download-shot-col">
+            <figure class="download-shot">
+              <img class="download-shot-image" src="./assets/launcher front page screenshot.png" alt="Fishbattery launcher home screen preview" loading="lazy" />
+              <figcaption>Home view with quick actions and live logs.</figcaption>
+            </figure>
+            <figure class="download-shot">
+              <img class="download-shot-image" src="./assets/Launcher create pvp ready preview.png" alt="Create PVP-ready setup preview" loading="lazy" />
+              <figcaption>Start from a pre-tuned PVP-ready setup.</figcaption>
+            </figure>
+          </div>
+          <div class="download-shot-col download-shot-col-right">
+            <figure class="download-shot">
+              <img class="download-shot-image" src="./assets/Launcher create modrinth preview.png" alt="Create instance from Modrinth preview" loading="lazy" />
+              <figcaption>Import and create from Modrinth in a few clicks.</figcaption>
+            </figure>
+            <figure class="download-shot">
+              <img class="download-shot-image" src="./assets/Launcher theme settings preview.png" alt="Theme settings preview" loading="lazy" />
+              <figcaption>Customize theme, accents, and interface style.</figcaption>
+            </figure>
+          </div>
         </div>
       </section>
 
@@ -128,6 +131,13 @@
         </div>
       </footer>
     </main>
+    <div id="downloadLightbox" class="download-lightbox hidden" aria-hidden="true">
+      <div class="download-lightbox-backdrop"></div>
+      <div class="download-lightbox-stage">
+        <img id="downloadLightboxImage" alt="" />
+        <button id="downloadLightboxClose" class="download-lightbox-close" type="button" aria-label="Close image preview">&times;</button>
+      </div>
+    </div>
     <script src="./site-nav.js"></script>
     <script src="./download.js"></script>
   </body>
