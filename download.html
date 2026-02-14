@@ -21,7 +21,7 @@
 
       <header class="card hero download-hero">
         <p class="kicker">Stable Release</p>
-        <h1>Download Fishbattery Launcher for Windows</h1>
+        <h1>Download Fishbattery Launcher</h1>
         <p class="lead">
           Fast install, clean setup, and automatic access to the newest stable build.
         </p>
@@ -32,10 +32,36 @@
         <p id="downloadSummary" class="hint download-summary">Loading release information...</p>
       </header>
 
+      <section class="card download-showcase">
+        <p class="kicker">Launcher previews</p>
+        <h2>See how Fishbattery looks before you install</h2>
+        <p class="hint">A clean home view, fast instance setup, and built-in theme control.</p>
+
+        <figure class="download-shot-main">
+          <img src="./assets/launcher front page screenshot.png" alt="Fishbattery launcher home screen preview" loading="lazy" />
+          <figcaption>Home view with quick actions and live logs.</figcaption>
+        </figure>
+
+        <div class="download-shot-grid">
+          <figure class="download-shot">
+            <img src="./assets/Launcher create modrinth preview.png" alt="Create instance from Modrinth preview" loading="lazy" />
+            <figcaption>Import and create from Modrinth in a few clicks.</figcaption>
+          </figure>
+          <figure class="download-shot">
+            <img src="./assets/Launcher create pvp ready preview.png" alt="Create PVP-ready setup preview" loading="lazy" />
+            <figcaption>Start from a pre-tuned PVP-ready setup.</figcaption>
+          </figure>
+          <figure class="download-shot">
+            <img src="./assets/Launcher theme settings preview.png" alt="Theme settings preview" loading="lazy" />
+            <figcaption>Customize theme, accents, and interface style.</figcaption>
+          </figure>
+        </div>
+      </section>
+
       <section class="card download-options">
         <p class="kicker">Download options</p>
         <h2>Pick your platform</h2>
-        <p class="hint">Windows is supported today. macOS and Linux packages are planned.</p>
+        <p class="hint">Download the latest release for Windows, macOS, and Linux.</p>
 
         <div class="download-platforms">
           <article class="download-platform download-platform-active">
@@ -59,7 +85,7 @@
               </svg>
             </div>
             <h3>macOS</h3>
-            <span class="btn btn-disabled">Coming soon</span>
+            <a id="macDownload" class="btn" href="#" target="_blank" rel="noreferrer">Download latest</a>
           </article>
 
           <article class="download-platform">
@@ -75,7 +101,7 @@
               </svg>
             </div>
             <h3>Linux</h3>
-            <span class="btn btn-disabled">Coming soon</span>
+            <a id="linuxDownload" class="btn" href="#" target="_blank" rel="noreferrer">Download latest</a>
           </article>
         </div>
 

@@ -2,15 +2,26 @@
   const summary = document.getElementById("downloadSummary");
   const windowsBtn = document.getElementById("windowsDownload");
   const windowsBtnSecondary = document.getElementById("windowsDownloadSecondary");
+  const macBtn = document.getElementById("macDownload");
+  const linuxBtn = document.getElementById("linuxDownload");
   const notesBtn = document.getElementById("releaseNotes");
 
-  function setUnavailable(message) {
-    summary.textContent = message;
-    for (const btn of [windowsBtn, windowsBtnSecondary]) {
-      if (!btn) continue;
-      btn.classList.add("btn-disabled");
-      btn.removeAttribute("href");
+  function disableButton(btn, label) {
+    if (!btn) return;
+    btn.classList.add("btn-disabled");
+    btn.removeAttribute("href");
+    if (label) btn.textContent = label;
+  }
+
+  function wireButton(btn, asset, fallbackLabel) {
+    if (!btn) return;
+    if (asset?.browser_download_url) {
+      btn.classList.remove("btn-disabled");
+      btn.href = asset.browser_download_url;
+      btn.textContent = fallbackLabel || `Download ${asset.name}`;
+      return;
     }
+    disableButton(btn, "Not available");
   }
 
   try {
@@ -27,25 +38,32 @@
     }
     const release = await response.json();
     const assets = Array.isArray(release.assets) ? release.assets : [];
-    const windowsAsset =
-      assets.find((a) => typeof a.name === "string" && a.name.toLowerCase().endsWith(".exe")) ||
-      null;
+    const byExt = (exts) =>
+      assets.find(
+        (a) =>
+          typeof a.name === "string" &&
+          exts.some((ext) => a.name.toLowerCase().endsWith(ext))
+      ) || null;
+
+    const windowsAsset = byExt([".exe"]);
+    const macAsset = byExt([".dmg", ".zip"]);
+    const linuxAsset = byExt([".appimage", ".deb", ".rpm", ".tar.gz"]);
 
     const tag = String(release.tag_name || "latest");
-    summary.textContent = windowsAsset
-      ? `Latest stable: ${tag}`
-      : `Latest stable: ${tag} (Windows download not found)`;
+    const availableTargets = [
+      windowsAsset ? "Windows" : null,
+      macAsset ? "macOS" : null,
+      linuxAsset ? "Linux" : null
+    ].filter(Boolean);
 
-    if (windowsAsset?.browser_download_url) {
-      for (const btn of [windowsBtn, windowsBtnSecondary]) {
-        if (!btn) continue;
-        btn.href = windowsAsset.browser_download_url;
-      }
-      windowsBtn.textContent = `Download ${windowsAsset.name}`;
-      if (windowsBtnSecondary) windowsBtnSecondary.textContent = "Download latest";
-    } else {
-      setUnavailable("Could not find a Windows installer in the latest stable release.");
-    }
+    summary.textContent = availableTargets.length
+      ? `Latest stable: ${tag} • ${availableTargets.join(" / ")}`
+      : `Latest stable: ${tag} (no downloadable assets found)`;
+
+    wireButton(windowsBtn, windowsAsset, windowsAsset ? `Download ${windowsAsset.name}` : "");
+    wireButton(windowsBtnSecondary, windowsAsset, "Download latest");
+    wireButton(macBtn, macAsset, "Download latest");
+    wireButton(linuxBtn, linuxAsset, "Download latest");
 
     const notesUrl = String(release.html_url || "").trim();
     if (notesUrl) {
@@ -55,9 +73,12 @@
       notesBtn.removeAttribute("href");
     }
   } catch {
-    setUnavailable(
-      "Could not load release information right now. Please try again shortly."
-    );
+    summary.textContent =
+      "Could not load release information right now. Please try again shortly.";
+    disableButton(windowsBtn, "Unavailable");
+    disableButton(windowsBtnSecondary, "Unavailable");
+    disableButton(macBtn, "Unavailable");
+    disableButton(linuxBtn, "Unavailable");
     notesBtn.href = "https://github.com/fishbatteryapp/FishbatteryLauncher/releases";
   }
 })();
