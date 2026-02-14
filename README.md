@@ -27,7 +27,7 @@ Then open:
 
 ## API configuration
 
-The site is wired to `https://api.fishbattery.app`.
+The site is wired to `https://fishbattery-auth-api-production.up.railway.app`.
 
 Homepage behavior:
 - Primary download button tries to fetch latest stable Windows `.exe` from GitHub releases.
@@ -36,3 +36,4 @@ Homepage behavior:
 ## Deploy
 
 Deploy this folder as a static site (Cloudflare Pages, Netlify, Vercel static, GitHub Pages, etc.).
+

@@ -1,17 +1,19 @@
 (function initUpgradePage() {
   const sessionSummary = document.getElementById("sessionSummary");
   const statusText = document.getElementById("statusText");
-  const API_BASES_DEFAULT = [
-    "https://api.fishbattery.app",
-    "https://fishbattery-auth-api-production.up.railway.app",
-    "http://localhost:3000"
-  ];
+  const PUBLIC_API_BASE = "https://fishbattery-auth-api-production.up.railway.app";
+  const isLocalDev =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
+  const API_BASES_DEFAULT = isLocalDev
+    ? [PUBLIC_API_BASE, "http://localhost:3000"]
+    : [PUBLIC_API_BASE];
   const token = localStorage.getItem("fishbattery.token") || "";
 
   function getApiBases() {
     const resolved = (localStorage.getItem("fishbattery.apiBaseResolved") || "").trim();
     const out = [];
-    if (resolved) out.push(resolved);
+    if (resolved && API_BASES_DEFAULT.includes(resolved)) out.push(resolved);
     for (const base of API_BASES_DEFAULT) {
       if (!out.includes(base)) out.push(base);
     }
@@ -262,3 +264,4 @@
     localStorage.removeItem("fishbattery.account");
   });
 })();
+

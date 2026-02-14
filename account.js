@@ -33,11 +33,13 @@
   const twofaDisableConfirmBtn = document.getElementById("twofaDisableConfirmBtn");
   const twofaDisableCancelBtn = document.getElementById("twofaDisableCancelBtn");
 
-  const API_BASES = [
-    "https://api.fishbattery.app",
-    "https://fishbattery-auth-api-production.up.railway.app",
-    "http://localhost:3000"
-  ];
+  const PUBLIC_API_BASE = "https://fishbattery-auth-api-production.up.railway.app";
+  const isLocalDev =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
+  const API_BASES = isLocalDev
+    ? [PUBLIC_API_BASE, "http://localhost:3000"]
+    : [PUBLIC_API_BASE];
 
   const token = (localStorage.getItem("fishbattery.token") || "").trim();
   if (!token) {
@@ -52,6 +54,7 @@
   let avatarScalePct = 100;
   let avatarOffsetXPct = 0;
   let avatarOffsetYPct = 0;
+  let avatarTransformDirty = false;
   let avatarDragging = false;
   let avatarDragPointerId = null;
   let avatarDragStartX = 0;
@@ -93,6 +96,7 @@
     avatarScalePct = 100;
     avatarOffsetXPct = 0;
     avatarOffsetYPct = 0;
+    avatarTransformDirty = false;
   }
 
   function getAvatarPreviewLayout() {
@@ -195,7 +199,12 @@
 
     ctx.clearRect(0, 0, out, out);
     ctx.drawImage(src, drawX, drawY, drawW, drawH);
-    return canvas.toDataURL("image/png");
+    try {
+      return canvas.toDataURL("image/png");
+    } catch {
+      // If canvas export is blocked (e.g. cross-origin image), keep original source.
+      return originalDataUrl;
+    }
   }
 
   function hideTwofaSetupPanel() {
@@ -260,7 +269,7 @@
   function getApiBases() {
     const resolved = (localStorage.getItem("fishbattery.apiBaseResolved") || "").trim();
     const out = [];
-    if (resolved) out.push(resolved);
+    if (resolved && API_BASES.includes(resolved)) out.push(resolved);
     for (const base of API_BASES) {
       if (!out.includes(base)) out.push(base);
     }
@@ -349,7 +358,10 @@
   });
 
   avatarResetViewBtn?.addEventListener("click", () => {
+    const hadNonDefault =
+      avatarScalePct !== 100 || avatarOffsetXPct !== 0 || avatarOffsetYPct !== 0;
     resetAvatarTransform();
+    if (avatarPreviewSource && hadNonDefault) avatarTransformDirty = true;
     renderAvatarPreviewTransform();
   });
 
@@ -375,6 +387,7 @@
       maxShiftX > 0 ? clamp(avatarDragStartOffsetX + (deltaX * 100) / maxShiftX, -100, 100) : 0;
     avatarOffsetYPct =
       maxShiftY > 0 ? clamp(avatarDragStartOffsetY + (deltaY * 100) / maxShiftY, -100, 100) : 0;
+    avatarTransformDirty = true;
     renderAvatarPreviewTransform();
   });
 
@@ -399,6 +412,7 @@
       if (!avatarPreviewSource || !avatarNaturalW || !avatarNaturalH) return;
       event.preventDefault();
       avatarScalePct = clamp(avatarScalePct - event.deltaY * 0.06, 50, 250);
+      avatarTransformDirty = true;
       renderAvatarPreviewTransform();
     },
     { passive: false }
@@ -415,8 +429,9 @@
       const body = { displayName };
       if (clearAvatar) {
         body.avatarUrl = null;
-      } else if (pendingAvatarData) {
-        body.avatarUrl = await buildTransformedAvatarDataUrl(pendingAvatarData);
+      } else if (pendingAvatarData || (avatarTransformDirty && avatarPreviewSource)) {
+        const avatarSource = pendingAvatarData || avatarPreviewSource;
+        body.avatarUrl = await buildTransformedAvatarDataUrl(avatarSource);
       }
 
       setStatus("Saving changes...");
@@ -630,3 +645,4 @@
     window.location.href = "./login.html";
   });
 })();
+
