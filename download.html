@@ -6,7 +6,7 @@
     <title>Download Fishbattery Launcher</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body>
+  <body class="download-page">
     <div class="bg"></div>
     <main class="page narrow">
       <header class="topbar card">
@@ -19,36 +19,48 @@
         <div id="authActions" class="actions"></div>
       </header>
 
-      <header class="card hero">
-        <p class="kicker">Download</p>
-        <h1>Get Fishbattery Launcher</h1>
+      <header class="card hero download-hero">
+        <p class="kicker">Stable Release</p>
+        <h1>Download Fishbattery Launcher for Windows</h1>
         <p class="lead">
-          Download the latest stable release directly from GitHub.
+          Fast install, clean setup, and automatic access to the newest stable build.
         </p>
-      </header>
-
-      <section class="card stack">
-        <h2>Latest stable version</h2>
-        <p id="downloadSummary" class="hint">Loading release information...</p>
-        <div class="actions">
+        <div class="actions hero-actions">
           <a id="windowsDownload" class="btn btn-primary" href="#" target="_blank" rel="noreferrer">Download for Windows</a>
           <a id="releaseNotes" class="btn" href="#" target="_blank" rel="noreferrer">Release notes</a>
         </div>
-      </section>
+        <p id="downloadSummary" class="hint download-summary">Loading release information...</p>
+      </header>
 
-      <section class="grid">
-        <article class="card">
-          <h2>Recommended</h2>
-          <p>Use the Windows installer for the fastest setup.</p>
-        </article>
-        <article class="card">
-          <h2>Always latest stable</h2>
-          <p>This page pulls the current stable GitHub release automatically.</p>
-        </article>
-        <article class="card">
-          <h2>Need older versions?</h2>
-          <p>Use release notes to browse all previous versions.</p>
-        </article>
+      <section class="card download-options">
+        <p class="kicker">Download options</p>
+        <h2>Pick your platform</h2>
+        <p class="hint">Windows is supported today. macOS and Linux packages are planned.</p>
+
+        <div class="download-platforms">
+          <article class="download-platform download-platform-active">
+            <div class="download-platform-icon">WIN</div>
+            <h3>Windows</h3>
+            <a id="windowsDownloadSecondary" class="btn btn-primary" href="#" target="_blank" rel="noreferrer">Download latest</a>
+          </article>
+
+          <article class="download-platform">
+            <div class="download-platform-icon">MAC</div>
+            <h3>macOS</h3>
+            <span class="btn btn-disabled">Coming soon</span>
+          </article>
+
+          <article class="download-platform">
+            <div class="download-platform-icon">LNX</div>
+            <h3>Linux</h3>
+            <span class="btn btn-disabled">Coming soon</span>
+          </article>
+        </div>
+
+        <p class="download-legal">
+          By downloading Fishbattery Launcher you agree to our
+          <a href="./terms.html">Terms</a> and <a href="./privacy.html">Privacy Policy</a>.
+        </p>
       </section>
 
       <footer class="card legal-footer">
@@ -63,7 +75,7 @@
         </div>
         <div class="legal-copy">
           <span>Based in Denmark</span>
-          <span>© Fishbattery</span>
+          <span>&copy; Fishbattery</span>
           <span>Not affiliated with Mojang or Microsoft.</span>
         </div>
       </footer>

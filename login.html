@@ -19,35 +19,53 @@
         <div id="authActions" class="actions"></div>
       </header>
 
-      <header class="card">
+      <section class="card auth-shell">
         <p class="kicker">Fishbattery account</p>
-        <h1>Sign in</h1>
-        <p class="lead">Sign in to manage your account and premium plan.</p>
-      </header>
+        <h1 id="authHeading">Sign in</h1>
 
-      <section class="card stack">
-        <h2>Credentials</h2>
-        <div class="actions">
+        <div class="actions auth-mode-switch">
           <button id="modeLogin" class="btn btn-primary">Sign in</button>
           <button id="modeRegister" class="btn">Create account</button>
         </div>
+
+        <h2 class="auth-subtitle">Continue with</h2>
+        <div class="auth-provider-grid">
+          <button class="btn auth-provider btn-disabled" type="button" aria-disabled="true">Discord</button>
+          <button class="btn auth-provider btn-disabled" type="button" aria-disabled="true">GitHub</button>
+          <button class="btn auth-provider btn-disabled" type="button" aria-disabled="true">Microsoft</button>
+          <button id="googleAuth" class="btn auth-provider auth-provider-google" type="button">Google</button>
+          <button class="btn auth-provider btn-disabled" type="button" aria-disabled="true">Steam</button>
+          <button class="btn auth-provider btn-disabled" type="button" aria-disabled="true">GitLab</button>
+        </div>
+
+        <h2 class="auth-subtitle" id="passwordSubtitle">Or use a password</h2>
         <label class="field">
           <span>Email</span>
           <input id="email" type="email" placeholder="you@example.com" />
+        </label>
+        <label id="displayNameField" class="field hidden">
+          <span>Display name</span>
+          <input id="displayName" type="text" placeholder="Your display name" maxlength="32" />
         </label>
         <label class="field">
           <span>Password</span>
           <input id="password" type="password" placeholder="Password" />
         </label>
-        <label id="displayNameField" class="field hidden">
-          <span>Display name</span>
-          <input id="displayName" type="text" placeholder="Your display name" />
+        <label id="confirmPasswordField" class="field hidden">
+          <span>Confirm password</span>
+          <input id="confirmPassword" type="password" placeholder="Confirm password" />
         </label>
+
         <div class="actions">
-          <button id="submitAuth" class="btn btn-primary">Continue</button>
+          <button id="submitAuth" class="btn btn-primary">Sign in</button>
           <a class="btn" href="./index.html">Back home</a>
         </div>
         <p id="statusText" class="hint">Enter your details to continue.</p>
+
+        <p class="hint auth-legal-note">
+          By continuing, you agree to our <a href="./terms.html">Terms of Service</a> and
+          <a href="./privacy.html">Privacy Policy</a>.
+        </p>
       </section>
 
       <footer class="card legal-footer">
@@ -62,7 +80,7 @@
         </div>
         <div class="legal-copy">
           <span>Contact: <a href="mailto:support@fishbattery.app">support@fishbattery.app</a></span>
-          <span>Based in Denmark • © Fishbattery</span>
+          <span>Based in Denmark &bull; &copy; Fishbattery</span>
           <span>Not affiliated with Mojang or Microsoft.</span>
         </div>
       </footer>

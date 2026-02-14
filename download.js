@@ -1,12 +1,16 @@
 (async function initDownloadPage() {
   const summary = document.getElementById("downloadSummary");
   const windowsBtn = document.getElementById("windowsDownload");
+  const windowsBtnSecondary = document.getElementById("windowsDownloadSecondary");
   const notesBtn = document.getElementById("releaseNotes");
 
   function setUnavailable(message) {
     summary.textContent = message;
-    windowsBtn.classList.add("btn-disabled");
-    windowsBtn.removeAttribute("href");
+    for (const btn of [windowsBtn, windowsBtnSecondary]) {
+      if (!btn) continue;
+      btn.classList.add("btn-disabled");
+      btn.removeAttribute("href");
+    }
   }
 
   try {
@@ -33,8 +37,12 @@
       : `Latest stable: ${tag} (Windows download not found)`;
 
     if (windowsAsset?.browser_download_url) {
-      windowsBtn.href = windowsAsset.browser_download_url;
+      for (const btn of [windowsBtn, windowsBtnSecondary]) {
+        if (!btn) continue;
+        btn.href = windowsAsset.browser_download_url;
+      }
       windowsBtn.textContent = `Download ${windowsAsset.name}`;
+      if (windowsBtnSecondary) windowsBtnSecondary.textContent = "Download latest";
     } else {
       setUnavailable("Could not find a Windows installer in the latest stable release.");
     }
