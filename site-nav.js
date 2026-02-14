@@ -42,6 +42,18 @@
     for (const el of document.querySelectorAll(".show-logged-in")) {
       el.classList.add("hidden");
     }
+    setSponsoredVisibility(true);
+  }
+
+  function isAdsFreeAccount(account) {
+    const tier = String(account?.subscriptionTier || account?.subscription_tier || "").toLowerCase();
+    return tier === "premium" || tier === "founder";
+  }
+
+  function setSponsoredVisibility(showSponsored) {
+    for (const el of document.querySelectorAll(".sponsored-slot")) {
+      el.classList.toggle("hidden", !showSponsored);
+    }
   }
 
   function getApiBases() {
@@ -100,24 +112,16 @@
     for (const el of document.querySelectorAll(".show-logged-in")) {
       el.classList.remove("hidden");
     }
+    setSponsoredVisibility(!isAdsFreeAccount(account));
   }
 
   const token = (localStorage.getItem("fishbattery.token") || "").trim();
-  const rawAccount = localStorage.getItem("fishbattery.account");
   if (!token) {
     renderLoggedOut();
     return;
   }
-  if (rawAccount) {
-    try {
-      const account = JSON.parse(rawAccount);
-      renderLoggedIn(account);
-      return;
-    } catch {
-      // fall through to restore
-    }
-  }
-
+  // While restoring, keep sponsored slots visible by default.
+  setSponsoredVisibility(true);
   container.innerHTML = `<span class="hint">Restoring session...</span>`;
   tryRestoreAccountFromToken(token).then((account) => {
     if (account) {

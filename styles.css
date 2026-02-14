@@ -301,6 +301,22 @@ h2 {
   justify-content: center;
 }
 
+.sponsored-slot {
+  display: grid;
+  gap: 0.55rem;
+  background:
+    radial-gradient(560px 180px at 50% -20%, rgba(111, 211, 255, 0.11), transparent 72%),
+    rgba(8, 20, 33, 0.66);
+}
+
+.sponsored-slot h2 {
+  margin-bottom: 0.15rem;
+}
+
+.sponsored-slot .lead {
+  margin-top: 0;
+}
+
 .site-footer {
   display: flex;
   justify-content: space-between;
