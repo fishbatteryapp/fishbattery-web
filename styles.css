@@ -208,11 +208,28 @@ h2 {
   margin-bottom: 0.35rem;
 }
 
+.home-page .feature-copy h2,
+.home-page .preview-card h2,
+.home-page .cta-band h2 {
+  font-size: clamp(1.55rem, 2.6vw, 2rem);
+}
+
+.home-page .feature-copy .lead,
+.home-page .cta-band .lead {
+  font-size: clamp(1.16rem, 1.7vw, 1.38rem);
+  line-height: 1.55;
+}
+
 .clean-list {
   margin: 0.75rem 0 0;
   padding-left: 1.1rem;
   color: var(--muted);
   line-height: 1.6;
+}
+
+.home-page .clean-list {
+  font-size: clamp(1.08rem, 1.45vw, 1.22rem);
+  line-height: 1.7;
 }
 
 .preview-card {
@@ -241,6 +258,14 @@ h2 {
 .preview-row span {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.home-page .preview-row strong {
+  font-size: clamp(1.16rem, 1.55vw, 1.3rem);
+}
+
+.home-page .preview-row span {
+  font-size: clamp(1.05rem, 1.35vw, 1.15rem);
 }
 
 .cta-band {
@@ -636,6 +661,7 @@ input[type="file"]::-webkit-file-upload-button:hover {
 .home-page .screenshot-tab,
 .home-page .grid .card,
 .home-page .split .card,
+.home-page .stack .card,
 .home-page .page > section.card {
   text-align: center;
 }
