@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fishbattery Public Profile</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="account-shell" style="max-width: 980px">
+      <section class="account-card">
+        <h1>Fishbattery Public Profile</h1>
+        <p class="lead">Shared launcher profile snapshot.</p>
+      </section>
+
+      <section id="profileMissing" class="account-card" style="display: none">
+        <h2>Profile not found</h2>
+        <p class="lead">
+          This profile link is invalid or expired.
+        </p>
+      </section>
+
+      <section id="profileRoot" class="account-card" style="display: none">
+        <h2 id="profileName">Player</h2>
+        <p id="profileMeta" class="lead"></p>
+
+        <div id="profileStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px"></div>
+
+        <div style="margin-top: 14px">
+          <h3>Benchmark</h3>
+          <p id="profileBenchmark" class="lead"></p>
+        </div>
+
+        <div style="margin-top: 14px">
+          <h3>Installed Setups</h3>
+          <div id="profileSetups" style="display: grid; gap: 8px"></div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./profile.js"></script>
+  </body>
+  </html>
