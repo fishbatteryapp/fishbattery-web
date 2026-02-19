@@ -10,6 +10,7 @@
   <body>
     <div class="bg"></div>
     <main class="page narrow">
+      <!-- Global site topbar and auth action mount point -->
       <header class="topbar card">
         <div class="top-left">
           <a class="brand" href="./index.html">Fishbattery</a>
@@ -21,12 +22,14 @@
         <div id="authActions" class="actions"></div>
       </header>
 
+      <!-- Page intro -->
       <header class="card">
         <p class="kicker">Account settings</p>
         <h1>Your profile</h1>
         <p class="lead">Update your unique username and profile picture.</p>
       </header>
 
+      <!-- Profile editing form -->
       <section class="card stack">
         <h2>Profile</h2>
         <p id="accountSummary" class="hint">Loading account...</p>
@@ -61,6 +64,7 @@
         <p id="statusText" class="hint">Make your changes, then click Save changes.</p>
       </section>
 
+      <!-- Password + 2FA security controls -->
       <section id="passwordSection" class="card stack hidden">
         <h2>Security</h2>
         <p class="hint">Change your account password.</p>
@@ -136,6 +140,7 @@
         </div>
       </section>
 
+      <!-- Data export and account deletion controls -->
       <section class="card stack">
         <h2>Privacy &amp; Data</h2>
         <p class="hint">Export your account data or permanently delete your Fishbattery account.</p>
@@ -146,6 +151,7 @@
         <p id="privacyStatusText" class="hint">You can also contact support@fishbattery.app for privacy requests.</p>
       </section>
 
+      <!-- Global legal footer -->
       <footer class="card legal-footer">
         <div class="legal-main">
           <strong>Fishbattery Launcher</strong>
@@ -164,6 +170,7 @@
         </div>
       </footer>
     </main>
+    <!-- Shared consent/nav + page logic -->
     <script src="./consent.js"></script>
     <script src="./site-nav.js"></script>
     <script src="./account.js"></script>

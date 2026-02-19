@@ -10,6 +10,7 @@
   <body class="download-page">
     <div class="bg"></div>
     <main class="page narrow">
+      <!-- Global site topbar and auth action mount point -->
       <header class="topbar card">
         <div class="top-left">
           <a class="brand" href="./index.html">Fishbattery</a>
@@ -21,6 +22,7 @@
         <div id="authActions" class="actions"></div>
       </header>
 
+      <!-- Primary release CTA block -->
       <header class="card hero download-hero">
         <p class="kicker">Stable Release</p>
         <h1>Download Fishbattery Launcher</h1>
@@ -34,6 +36,7 @@
         <p id="downloadSummary" class="hint download-summary">Loading release information...</p>
       </header>
 
+      <!-- Static launcher screenshot gallery -->
       <section class="card download-showcase">
         <p class="kicker">Launcher previews</p>
         <h2>See the launcher before you install it</h2>
@@ -63,6 +66,7 @@
         </div>
       </section>
 
+      <!-- Platform-specific download options -->
       <section class="card download-options">
         <p class="kicker">Download options</p>
         <h2>Pick your platform</h2>
@@ -116,6 +120,7 @@
         </p>
       </section>
 
+      <!-- Sponsored placement -->
       <section class="card sponsored-slot" data-ad-placement="website-download-main">
         <p class="kicker sponsored-kicker">Sponsored</p>
         <div class="sponsored-adsense-wrap">
@@ -131,6 +136,7 @@
         </div>
       </section>
 
+      <!-- Global legal footer -->
       <footer class="card legal-footer">
         <div class="legal-main">
           <strong>Fishbattery Launcher</strong>
@@ -149,6 +155,7 @@
         </div>
       </footer>
     </main>
+    <!-- Image lightbox for preview screenshots -->
     <div id="downloadLightbox" class="download-lightbox hidden" aria-hidden="true">
       <div class="download-lightbox-backdrop"></div>
       <div class="download-lightbox-stage">
@@ -156,6 +163,7 @@
         <button id="downloadLightboxClose" class="download-lightbox-close" type="button" aria-label="Close image preview">&times;</button>
       </div>
     </div>
+    <!-- Release notes modal -->
     <div id="releaseNotesModal" class="release-notes-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="releaseNotesTitle">
       <div class="release-notes-backdrop"></div>
       <article class="release-notes-panel">
@@ -172,6 +180,7 @@
         </div>
       </article>
     </div>
+    <!-- Shared consent/nav + page logic -->
     <script src="./consent.js"></script>
     <script src="./site-nav.js"></script>
     <script src="./download.js"></script>

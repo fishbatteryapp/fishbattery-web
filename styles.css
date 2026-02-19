@@ -1,3 +1,6 @@
+/* -------------------------------------------------------------------------- */
+/* Theme tokens and global color system                                       */
+/* -------------------------------------------------------------------------- */
 :root {
   color-scheme: dark;
   --bg-0: #050b14;
@@ -10,6 +13,7 @@
   --accent-2: #6fd3ff;
 }
 
+/* Base reset and document defaults */
 *,
 *::before,
 *::after {
@@ -25,6 +29,7 @@ body {
   font-size: 112.5%;
 }
 
+/* App-wide background treatment */
 .bg {
   position: fixed;
   inset: 0;
@@ -35,6 +40,7 @@ body {
     linear-gradient(180deg, var(--bg-1), var(--bg-0));
 }
 
+/* Page/container primitives */
 .page {
   width: 100%;
   min-height: 100vh;
@@ -58,6 +64,7 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
+/* Top navigation and account pill */
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -138,6 +145,7 @@ body {
   border: 1px solid rgba(111, 211, 255, 0.35);
 }
 
+/* Hero and typography primitives */
 .hero {
   padding: 1.4rem 1.5rem;
 }
@@ -192,6 +200,7 @@ h2 {
   line-height: 1.5;
 }
 
+/* Generic layout utilities */
 .grid {
   display: grid;
   gap: 1rem;
@@ -301,6 +310,7 @@ h2 {
   justify-content: center;
 }
 
+/* Sponsored placement blocks */
 .sponsored-slot {
   display: grid;
   gap: 0.55rem;
@@ -326,6 +336,7 @@ h2 {
   min-height: 120px;
 }
 
+/* Footer and legal navigation */
 .site-footer {
   display: flex;
   justify-content: space-between;

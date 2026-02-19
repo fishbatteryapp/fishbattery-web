@@ -10,6 +10,7 @@
   <body>
     <div class="bg"></div>
     <main class="page narrow">
+      <!-- Global site topbar and auth action mount point -->
       <header class="topbar card">
         <div class="top-left">
           <a class="brand" href="./index.html">Fishbattery</a>
@@ -21,12 +22,14 @@
         <div id="authActions" class="actions"></div>
       </header>
 
+      <!-- Page intro -->
       <header class="card">
         <p class="kicker">Fishbattery account</p>
         <h1>Upgrade to Premium</h1>
         <p class="lead">Manage your plan with your signed-in account.</p>
       </header>
 
+      <!-- Session/account status controls -->
       <section class="card stack">
         <h2>Your account</h2>
         <p id="sessionSummary" class="hint">Checking session...</p>
@@ -37,6 +40,7 @@
         </div>
       </section>
 
+      <!-- Billing and subscription actions -->
       <section class="card stack">
         <h2>Billing</h2>
         <div class="actions">
@@ -47,6 +51,7 @@
         <p id="statusText" class="hint">Pick a plan or open billing settings.</p>
       </section>
 
+      <!-- Global legal footer -->
       <footer class="card legal-footer">
         <div class="legal-main">
           <strong>Fishbattery Launcher</strong>
@@ -65,6 +70,7 @@
         </div>
       </footer>
     </main>
+    <!-- Shared consent/nav + page billing logic -->
     <script src="./consent.js"></script>
     <script src="./site-nav.js"></script>
     <script src="./upgrade.js"></script>

@@ -7,12 +7,15 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <!-- Public profile shell used for shared launcher profile links -->
     <main class="account-shell" style="max-width: 980px">
+      <!-- Intro card -->
       <section class="account-card">
         <h1>Fishbattery Public Profile</h1>
         <p class="lead">Shared launcher profile snapshot.</p>
       </section>
 
+      <!-- Empty state when token/payload cannot be resolved -->
       <section id="profileMissing" class="account-card" style="display: none">
         <h2>Profile not found</h2>
         <p class="lead">
@@ -20,6 +23,7 @@
         </p>
       </section>
 
+      <!-- Main profile content -->
       <section id="profileRoot" class="account-card" style="display: none">
         <h2 id="profileName">Player</h2>
         <p id="profileMeta" class="lead"></p>
@@ -38,6 +42,7 @@
       </section>
     </main>
 
+    <!-- Shared consent + page-specific profile renderer -->
     <script src="./consent.js"></script>
     <script type="module" src="./profile.js"></script>
   </body>
