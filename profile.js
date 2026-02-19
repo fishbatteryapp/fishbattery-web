@@ -1,4 +1,12 @@
+// Public profile page renderer.
+// Input:
+// - Reads compact payload from `?p=...` query parameter.
+// Behavior:
+// - Decodes payload, validates shape, and renders a read-only profile snapshot.
+// - Shows "Profile not found" when payload is missing/invalid.
+
 function decodePayload(raw) {
+  // Payload is URL-safe base64; normalize to standard base64 first.
   const normalized = String(raw || "")
     .replace(/-/g, "+")
     .replace(/_/g, "/");
@@ -14,16 +22,19 @@ function decodePayload(raw) {
 }
 
 function text(el, value) {
+  // Small null-safe text setter helper.
   if (!el) return;
   el.textContent = String(value ?? "");
 }
 
 function render() {
+  // Resolve payload from URL query.
   const params = new URLSearchParams(window.location.search);
   const payloadRaw = params.get("p");
   const missing = document.getElementById("profileMissing");
   const root = document.getElementById("profileRoot");
 
+  // Missing payload -> invalid link screen.
   if (!payloadRaw) {
     if (missing) missing.style.display = "";
     if (root) root.style.display = "none";
@@ -32,6 +43,7 @@ function render() {
 
   let payload = null;
   try {
+    // Invalid base64/json should fail gracefully.
     payload = decodePayload(payloadRaw);
   } catch {
     if (missing) missing.style.display = "";
@@ -39,6 +51,7 @@ function render() {
     return;
   }
 
+  // Basic payload shape guard.
   if (!payload || typeof payload !== "object") {
     if (missing) missing.style.display = "";
     if (root) root.style.display = "none";
@@ -54,6 +67,7 @@ function render() {
   text(document.getElementById("profileName"), name);
   text(document.getElementById("profileMeta"), `Tier: ${tier} | Shared: ${generatedAt}`);
 
+  // Summary cards shown at top of profile.
   const stats = [
     ["Playtime", payload.totals?.playtime ?? "0m"],
     ["Installed Mods", payload.totals?.installedMods ?? 0],
@@ -85,6 +99,7 @@ function render() {
     }
   }
 
+  // Benchmark summary line.
   const bm = payload.benchmark;
   text(
     document.getElementById("profileBenchmark"),
@@ -93,6 +108,7 @@ function render() {
       : "No benchmark available."
   );
 
+  // Per-setup rows section.
   const setupsRoot = document.getElementById("profileSetups");
   if (setupsRoot) {
     setupsRoot.innerHTML = "";

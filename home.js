@@ -1,8 +1,12 @@
 (async function initHomeDownloadButton() {
+  // Home hero CTA enhancer:
+  // Try replacing default /download link with direct latest Windows .exe link.
+  // If anything fails, keep existing fallback link untouched.
   const primaryCta = document.getElementById("heroPrimaryCta");
   if (!primaryCta) return;
 
   try {
+    // Query latest GitHub release.
     const response = await fetch(
       "https://api.github.com/repos/fishbatteryapp/FishbatteryLauncher/releases/latest",
       { headers: { Accept: "application/vnd.github+json" } }
@@ -10,6 +14,7 @@
     if (!response.ok) return;
     const release = await response.json();
     const assets = Array.isArray(release.assets) ? release.assets : [];
+    // Prefer direct Windows installer asset.
     const windowsAsset = assets.find(
       (asset) =>
         typeof asset?.name === "string" &&
@@ -22,14 +27,16 @@
     primaryCta.setAttribute("target", "_blank");
     primaryCta.setAttribute("rel", "noreferrer");
   } catch {
-    // Keep fallback href to /download.html
+    // No-op: default href points to /download.html.
   }
 })();
 
 (function initPreviewLightbox() {
+  // Generic image preview lightbox used on homepage preview images.
   const previewImages = Array.from(document.querySelectorAll(".preview-clickable"));
   if (!previewImages.length) return;
 
+  // Reuse existing lightbox if present; create one if page doesn't have it yet.
   const existing = document.getElementById("downloadLightbox");
   if (!existing) {
     const shell = document.createElement("div");
@@ -53,6 +60,7 @@
   let activeSourceImg = null;
   let animating = false;
 
+  // Compute centered final bounds while preserving source image aspect ratio.
   function fitRectFromSource(sourceImg) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -77,6 +85,7 @@
     };
   }
 
+  // Create an animated clone for smooth zoom transitions.
   function makeAnimClone(srcImg, rect) {
     const clone = srcImg.cloneNode(true);
     clone.style.position = "fixed";
@@ -94,6 +103,7 @@
     return clone;
   }
 
+  // Animate element from one rect to another.
   async function animateBetweenRects(el, fromRect, toRect, duration) {
     const animation = el.animate(
       [
@@ -119,6 +129,7 @@
     await animation.finished;
   }
 
+  // Open lightbox from clicked source image.
   async function open(sourceImg) {
     if (animating) return;
     animating = true;
@@ -139,6 +150,7 @@
     animating = false;
   }
 
+  // Close lightbox back to source image position.
   async function close() {
     if (!activeSourceImg || animating) return;
     animating = true;
@@ -158,12 +170,14 @@
     animating = false;
   }
 
+  // Bind click handlers for all preview images.
   for (const img of previewImages) {
     img.addEventListener("click", () => {
       void open(img);
     });
   }
 
+  // Backdrop click closes lightbox.
   lightbox.addEventListener("click", (ev) => {
     const target = ev.target;
     if (target && target.classList?.contains("download-lightbox-backdrop")) {
@@ -171,6 +185,7 @@
     }
   });
 
+  // Close button and ESC shortcuts.
   lightboxClose.addEventListener("click", () => {
     void close();
   });

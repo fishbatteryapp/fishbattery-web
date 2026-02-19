@@ -1,4 +1,11 @@
 (function initUpgradePage() {
+  // Upgrade/billing page controller.
+  // Responsibilities:
+  // - Validate session
+  // - Show current subscription tier
+  // - Start checkout sessions (monthly/yearly)
+  // - Open Stripe billing portal
+
   const sessionSummary = document.getElementById("sessionSummary");
   const statusText = document.getElementById("statusText");
   const PUBLIC_API_BASE = "https://fishbattery-auth-api-production.up.railway.app";
@@ -11,6 +18,7 @@
   const token = localStorage.getItem("fishbattery.token") || "";
 
   function getApiBases() {
+    // Prefer last successful base first to reduce retries.
     const resolved = (localStorage.getItem("fishbattery.apiBaseResolved") || "").trim();
     const out = [];
     if (resolved && API_BASES_DEFAULT.includes(resolved)) out.push(resolved);
@@ -21,10 +29,12 @@
   }
 
   function write(value) {
+    // Status helper for user feedback.
     statusText.textContent = String(value || "");
   }
 
   function errorText(error) {
+    // Friendly extraction for mixed string/json error messages.
     const raw = String((error && error.message) || error || "").trim();
     if (!raw) return "Unknown error";
     try {
@@ -41,6 +51,7 @@
   }
 
   async function parseResponse(response) {
+    // Handles JSON and plain text API responses.
     const text = await response.text();
     let parsed = text;
     try {
@@ -55,6 +66,7 @@
   }
 
   function buildCheckoutUrls() {
+    // Build redirect URLs relative to current page host/path.
     const base = `${window.location.origin}${window.location.pathname.replace(/\/[^/]*$/, "")}`;
     const upgradeUrl = `${base}/upgrade.html`;
     return {
@@ -65,6 +77,7 @@
   }
 
   async function request(path, init) {
+    // API request with network failover between configured bases.
     let lastError = new Error("Request failed");
     for (const base of getApiBases()) {
       try {
@@ -89,6 +102,7 @@
   }
 
   async function checkSession() {
+    // Validates token and hydrates account summary.
     const token = getToken();
     if (!token) {
       window.location.href = "./login.html";
@@ -111,6 +125,7 @@
   }
 
   async function checkSubscription() {
+    // Fetches current subscription tier to display plan status.
     const token = getToken();
     if (!token) {
       window.location.href = "./login.html";
@@ -127,6 +142,7 @@
   }
 
   async function startCheckout(plan) {
+    // Starts server-created checkout session and redirects to Stripe URL.
     const token = getToken();
     if (!token) {
       window.location.href = "./login.html";

@@ -1,4 +1,12 @@
 (async function initDownloadPage() {
+  // Download page controller.
+  // Handles:
+  // - Fetching latest GitHub release/assets
+  // - Wiring platform download buttons
+  // - Rendering release notes modal
+  // - Image lightbox preview with open/close animation
+
+  // Core UI references.
   const summary = document.getElementById("downloadSummary");
   const windowsBtn = document.getElementById("windowsDownload");
   const windowsBtnSecondary = document.getElementById("windowsDownloadSecondary");
@@ -19,6 +27,7 @@
   let notesAnimating = false;
   let releaseLoaded = false;
 
+  // Disable a button-style link when no asset is available.
   function disableButton(btn, label) {
     if (!btn) return;
     btn.classList.add("btn-disabled");
@@ -26,6 +35,7 @@
     if (label) btn.textContent = label;
   }
 
+  // Attach an asset URL/label if available; otherwise disable.
   function wireButton(btn, asset, fallbackLabel) {
     if (!btn) return;
     if (asset?.browser_download_url) {
@@ -37,6 +47,7 @@
     disableButton(btn, "Not available");
   }
 
+  // Escape raw text before placing into HTML.
   function escapeHtml(value) {
     return String(value)
       .replace(/&/g, "&amp;")
@@ -46,6 +57,9 @@
       .replace(/'/g, "&#39;");
   }
 
+  // Minimal inline markdown handling:
+  // - [text](url) links
+  // - `inline code`
   function formatInline(text) {
     const chunks = [];
     const src = String(text || "");
@@ -63,6 +77,8 @@
     return chunks.join("").replace(/`([^`]+)`/g, "<code>$1</code>");
   }
 
+  // Convert release markdown body into simple HTML blocks.
+  // Supports headings, unordered/ordered lists, and paragraphs.
   function renderReleaseBody(markdown) {
     const source = String(markdown || "").trim();
     if (!source) {
@@ -137,6 +153,7 @@
     return out.join("");
   }
 
+  // Friendly release publish date formatter.
   function formatPublishedDate(value) {
     if (!value) return "";
     const d = new Date(value);
@@ -148,6 +165,7 @@
     });
   }
 
+  // Load latest release from GitHub and wire platform buttons + notes metadata.
   try {
     const response = await fetch(
       "https://api.github.com/repos/fishbatteryapp/FishbatteryLauncher/releases/latest",
@@ -209,6 +227,7 @@
     }
     releaseLoaded = true;
   } catch {
+    // Graceful fallback when GitHub API is unavailable/rate-limited.
     summary.textContent =
       "Could not load release information right now. Please try again shortly.";
     disableButton(windowsBtn, "Unavailable");
@@ -226,6 +245,7 @@
     }
   }
 
+  // Calculate target rect for animated image zoom lightbox.
   function fitRectFromSource(sourceImg) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -250,6 +270,7 @@
     };
   }
 
+  // Clone source image into a temporary animated element.
   function makeAnimClone(srcImg, rect) {
     const clone = srcImg.cloneNode(true);
     clone.style.position = "fixed";
@@ -267,6 +288,7 @@
     return clone;
   }
 
+  // Temporary animated panel clone for release-notes modal transitions.
   function makeNotesAnimClone(rect, radius) {
     const clone = document.createElement("div");
     clone.style.position = "fixed";
@@ -283,6 +305,7 @@
     return clone;
   }
 
+  // Generic rect animation helper (position+size).
   async function animateBetweenRects(el, fromRect, toRect, duration) {
     const animation = el.animate(
       [
@@ -308,6 +331,7 @@
     await animation.finished;
   }
 
+  // Notes panel animation helper (position+size+radius).
   async function animateNotesClone(clone, fromRect, toRect, fromRadius, toRadius, duration) {
     const animation = clone.animate(
       [
@@ -335,6 +359,7 @@
     await animation.finished;
   }
 
+  // Open image lightbox from clicked preview image.
   async function openLightbox(sourceImg) {
     if (!lightbox || !lightboxImg || animating) return;
     animating = true;
@@ -356,6 +381,7 @@
     animating = false;
   }
 
+  // Close image lightbox back to original thumbnail position.
   async function closeLightbox() {
     if (!lightbox || !lightboxImg || !activeSourceImg || animating) return;
     animating = true;
@@ -375,6 +401,7 @@
     animating = false;
   }
 
+  // Open release notes modal with button-to-panel animation.
   async function openNotesModal() {
     if (!notesModal || !notesPanel || !notesBtn || notesAnimating) return;
     notesAnimating = true;
@@ -393,6 +420,7 @@
     notesAnimating = false;
   }
 
+  // Close release notes modal back to button position.
   async function closeNotesModal() {
     if (!notesModal || !notesPanel || !notesBtn || notesAnimating || notesModal.classList.contains("hidden")) {
       return;
@@ -412,12 +440,16 @@
     notesAnimating = false;
   }
 
+  // Image click -> open lightbox.
   for (const img of shotImages) {
     img.addEventListener("click", () => {
       void openLightbox(img);
     });
   }
 
+  // Release notes button:
+  // - Open modal if notes are loaded/renderable
+  // - Else fall back to GitHub release page
   if (notesBtn) {
     notesBtn.addEventListener("click", (ev) => {
       ev.preventDefault();
@@ -432,6 +464,7 @@
     });
   }
 
+  // Lightbox backdrop closes image preview.
   if (lightbox) {
     lightbox.addEventListener("click", (ev) => {
       const target = ev.target;
@@ -441,12 +474,14 @@
     });
   }
 
+  // Lightbox close button.
   if (lightboxClose) {
     lightboxClose.addEventListener("click", () => {
       void closeLightbox();
     });
   }
 
+  // Notes backdrop closes notes modal.
   if (notesModal) {
     notesModal.addEventListener("click", (ev) => {
       const target = ev.target;
@@ -456,12 +491,14 @@
     });
   }
 
+  // Notes modal close button.
   if (notesClose) {
     notesClose.addEventListener("click", () => {
       void closeNotesModal();
     });
   }
 
+  // ESC key closes whichever overlay is open (notes first, then image lightbox).
   document.addEventListener("keydown", (ev) => {
     if (ev.key !== "Escape") return;
     if (notesModal && !notesModal.classList.contains("hidden")) {

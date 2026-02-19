@@ -1,4 +1,12 @@
 (function initLoginPage() {
+  // Login page controller.
+  // Handles:
+  // - Login/register mode switching
+  // - Password auth (+ optional 2FA challenge flow)
+  // - Google OAuth redirect flow
+  // - Session restore/redirect if already authenticated
+
+  // Core form/UI references.
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
   const displayNameInput = document.getElementById("displayName");
@@ -15,6 +23,9 @@
   const submitBtn = document.getElementById("submitAuth");
   const googleAuthBtn = document.getElementById("googleAuth");
 
+  // API resolution:
+  // - Production URL is always available
+  // - Local URL is tried as fallback during local development
   const PUBLIC_API_BASE = "https://fishbattery-auth-api-production.up.railway.app";
   const isLocalDev =
     window.location.hostname === "localhost" ||
@@ -26,10 +37,12 @@
   let mode = "login";
   let pendingTwoFactorChallenge = "";
 
+  // Small status text helper for user feedback.
   function write(value) {
     statusText.textContent = String(value || "");
   }
 
+  // Toggle between login/register UI states.
   function setMode(nextMode) {
     mode = nextMode;
     const register = mode === "register";
@@ -48,9 +61,11 @@
     write(register ? "Create your account to get started." : "Sign in with your account.");
   }
 
+  // Mode switch buttons.
   modeLoginBtn.addEventListener("click", () => setMode("login"));
   modeRegisterBtn.addEventListener("click", () => setMode("register"));
 
+  // Parse both JSON and plain-text error responses from API.
   async function parseResponse(res) {
     const text = await res.text();
     let data = text;
@@ -65,6 +80,7 @@
     return data;
   }
 
+  // Order API bases so previously successful one is tried first.
   function getApiBases() {
     const resolved = (localStorage.getItem("fishbattery.apiBaseResolved") || "").trim();
     const out = [];
@@ -75,6 +91,7 @@
     return out;
   }
 
+  // Network request helper with base failover for connectivity issues.
   async function request(path, init) {
     let lastError = new Error("Request failed");
     for (const base of getApiBases()) {
@@ -97,11 +114,13 @@
     throw lastError;
   }
 
+  // Clear stored web auth state.
   function clearSession() {
     localStorage.removeItem("fishbattery.token");
     localStorage.removeItem("fishbattery.account");
   }
 
+  // If token exists and is valid, skip login page and move to account settings.
   async function tryRestoreSession() {
     const token = (localStorage.getItem("fishbattery.token") || "").trim();
     if (!token) return;
@@ -118,10 +137,12 @@
     }
   }
 
+  // OAuth redirect URI is current page URL.
   function currentRedirectUri() {
     return `${window.location.origin}${window.location.pathname}`;
   }
 
+  // Start Google OAuth by requesting start params from API and redirecting.
   async function startGoogleAuth() {
     write("Opening Google sign-in...");
     const redirectUri = currentRedirectUri();
@@ -134,6 +155,7 @@
     window.location.href = startData.authUrl;
   }
 
+  // Complete OAuth flow when redirected back with code+state in query string.
   async function completeGoogleAuthFromQuery() {
     const query = new URLSearchParams(window.location.search);
     const code = String(query.get("code") || "").trim();
@@ -143,6 +165,7 @@
       write("Google sign-in was canceled or failed.");
       query.delete("error");
       query.delete("error_description");
+      // Clean URL after handled error.
       window.history.replaceState({}, "", `${window.location.pathname}?${query.toString()}`.replace(/\?$/, ""));
       return;
     }
@@ -168,6 +191,7 @@
     window.location.href = "./account.html";
   }
 
+  // Map low-level/server errors to clearer user-facing messages.
   function userErrorMessage(error) {
     const message = error instanceof Error ? error.message : String(error);
     const lower = message.toLowerCase();
@@ -187,6 +211,10 @@
     return "Could not complete authentication right now. Please try again.";
   }
 
+  // Primary submit handler for:
+  // - register
+  // - login
+  // - 2FA verification step
   async function submitAuth() {
     try {
       const email = emailInput.value.trim();
@@ -211,12 +239,14 @@
 
       let data;
       if (mode === "register") {
+        // Registration path.
         data = await request("/v1/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password, displayName })
         });
       } else if (pendingTwoFactorChallenge) {
+        // 2FA completion path after challenge was issued.
         const code = String(twoFactorInput?.value || "").replace(/\s+/g, "");
         if (!/^\d{6}$/.test(code)) {
           write("Enter a valid 6-digit authenticator code.");
@@ -228,12 +258,14 @@
           body: JSON.stringify({ challengeToken: pendingTwoFactorChallenge, code })
         });
       } else {
+        // First-step login (may return requiresTwoFactor).
         data = await request("/v1/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
         });
         if (data?.requiresTwoFactor && data?.challengeToken) {
+          // Switch UI into 2FA mode while preserving challenge token.
           pendingTwoFactorChallenge = String(data.challengeToken);
           twoFactorField.classList.remove("hidden");
           submitBtn.textContent = "Verify code";
@@ -253,8 +285,10 @@
     }
   }
 
+  // Main submit click.
   submitBtn.addEventListener("click", submitAuth);
 
+  // Enter key shortcut for password login.
   passwordInput.addEventListener("keydown", (event) => {
     if (event.key !== "Enter") return;
     if (mode !== "login") return;
@@ -262,6 +296,7 @@
     void submitAuth();
   });
 
+  // Enter key shortcut for 2FA code submit.
   twoFactorInput?.addEventListener("keydown", (event) => {
     if (event.key !== "Enter") return;
     if (!pendingTwoFactorChallenge) return;
@@ -269,6 +304,7 @@
     void submitAuth();
   });
 
+  // Google auth button.
   googleAuthBtn.addEventListener("click", async () => {
     try {
       await startGoogleAuth();
@@ -277,6 +313,10 @@
     }
   });
 
+  // Initial bootstrap:
+  // 1) Set mode from query (?mode=register)
+  // 2) Complete OAuth if redirect params exist
+  // 3) Otherwise try session restore
   const query = new URLSearchParams(window.location.search);
   setMode(query.get("mode") === "register" ? "register" : "login");
   completeGoogleAuthFromQuery()
