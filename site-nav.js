@@ -1,7 +1,18 @@
 (function initSiteNav() {
+  // Purpose:
+  // Keep top navigation/auth actions consistent across all website pages.
+  //
+  // Responsibilities:
+  // - Restore session from token (if present).
+  // - Render logged-out CTA or logged-in account pill + logout.
+  // - Toggle sponsored sections by subscription status and consent state.
+
+  // All pages that use this script provide an auth action container.
   const container = document.getElementById("authActions");
   if (!container) return;
+  // Primary hosted API endpoint.
   const PUBLIC_API_BASE = "https://fishbattery-auth-api-production.up.railway.app";
+  // Local development fallback logic.
   const isLocalDev =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1";
@@ -9,11 +20,13 @@
     ? [PUBLIC_API_BASE, "http://localhost:3000"]
     : [PUBLIC_API_BASE];
 
+  // Remove local session artifacts.
   function clearSession() {
     localStorage.removeItem("fishbattery.token");
     localStorage.removeItem("fishbattery.account");
   }
 
+  // Escape untrusted text before interpolation into HTML strings.
   function escapeHtml(value) {
     return String(value || "")
       .replace(/&/g, "&amp;")
@@ -22,6 +35,7 @@
       .replace(/"/g, "&quot;");
   }
 
+  // Fallback avatar initials when no avatar image URL exists.
   function initialsFor(name) {
     const cleaned = String(name || "").trim();
     if (!cleaned) return "U";
@@ -33,6 +47,9 @@
       .toUpperCase();
   }
 
+  // Logged-out rendering:
+  // - Show Login / Create account buttons.
+  // - Toggle helper classes used by page content (`show-logged-in/out`).
   function renderLoggedOut() {
     container.innerHTML = `
       <a class="btn" href="./login.html">Log in</a>
@@ -47,17 +64,26 @@
     setSponsoredVisibility(true);
   }
 
+  // Premium and founder tiers are ad-free.
   function isAdsFreeAccount(account) {
     const tier = String(account?.subscriptionTier || account?.subscription_tier || "").toLowerCase();
     return tier === "premium" || tier === "founder";
   }
 
+  // Show/hide sponsored slots based on account status and consent.
   function setSponsoredVisibility(showSponsored) {
+    const consentApi = window.fishbatteryConsent;
+    // If consent API is unavailable, default to true to avoid hiding unexpectedly.
+    const hasConsent =
+      !consentApi || typeof consentApi.hasAdConsent !== "function"
+        ? true
+        : !!consentApi.hasAdConsent();
     for (const el of document.querySelectorAll(".sponsored-slot")) {
-      el.classList.toggle("hidden", !showSponsored);
+      el.classList.toggle("hidden", !(showSponsored && hasConsent));
     }
   }
 
+  // Prioritize previously successful API base for faster future calls.
   function getApiBases() {
     const resolved = (localStorage.getItem("fishbattery.apiBaseResolved") || "").trim();
     const out = [];
@@ -68,6 +94,7 @@
     return out;
   }
 
+  // Validate token by calling session endpoint on available API bases.
   async function tryRestoreAccountFromToken(token) {
     for (const base of getApiBases()) {
       try {
@@ -78,6 +105,7 @@
         const data = await res.json();
         const account = data?.account;
         if (!account) continue;
+        // Persist successful base and account cache.
         localStorage.setItem("fishbattery.apiBaseResolved", base);
         localStorage.setItem("fishbattery.account", JSON.stringify(account));
         return account;
@@ -88,6 +116,10 @@
     return null;
   }
 
+  // Logged-in rendering:
+  // - Account pill with avatar/initials.
+  // - Logout button.
+  // - Section visibility toggles.
   function renderLoggedIn(account) {
     const name = account?.displayName || "Signed in";
     const avatarUrl = String(account?.avatarUrl || "").trim();
@@ -117,14 +149,17 @@
     setSponsoredVisibility(!isAdsFreeAccount(account));
   }
 
+  // Bootstrap:
+  // If no token, render logged out immediately.
   const token = (localStorage.getItem("fishbattery.token") || "").trim();
   if (!token) {
     renderLoggedOut();
     return;
   }
-  // While restoring, keep sponsored slots visible by default.
+  // While validating token, keep UI responsive and show temporary restoring state.
   setSponsoredVisibility(true);
   container.innerHTML = `<span class="hint">Restoring session...</span>`;
+  // Resolve final nav state after token validation.
   tryRestoreAccountFromToken(token).then((account) => {
     if (account) {
       renderLoggedIn(account);

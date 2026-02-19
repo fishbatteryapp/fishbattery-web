@@ -1,4 +1,9 @@
 (function initAccountPage() {
+  // Account page overview:
+  // - Loads current account session/profile.
+  // - Handles profile edits, avatar transform/upload, password changes, 2FA setup/disable.
+  // - Includes GDPR self-service actions (data export + account deletion).
+
   const summary = document.getElementById("accountSummary");
   const emailInput = document.getElementById("email");
   const displayNameInput = document.getElementById("displayName");
@@ -32,7 +37,13 @@
   const twofaDisableCode = document.getElementById("twofaDisableCode");
   const twofaDisableConfirmBtn = document.getElementById("twofaDisableConfirmBtn");
   const twofaDisableCancelBtn = document.getElementById("twofaDisableCancelBtn");
+  const exportDataBtn = document.getElementById("exportDataBtn");
+  const deleteAccountBtn = document.getElementById("deleteAccountBtn");
+  const privacyStatusText = document.getElementById("privacyStatusText");
 
+  // API base strategy:
+  // - Use production endpoint by default.
+  // - In localhost development, allow local API fallback.
   const PUBLIC_API_BASE = "https://fishbattery-auth-api-production.up.railway.app";
   const isLocalDev =
     window.location.hostname === "localhost" ||
@@ -65,6 +76,7 @@
   let canChangePassword = false;
   let twoFactorEnabled = false;
 
+  // Password visibility icon assets.
   const eyeOpenSvg =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.6-6 9.5-6 9.5 6 9.5 6-3.6 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"></circle></svg>';
   const eyeClosedSvg =
@@ -90,6 +102,10 @@
 
   function setTwofaStatus(message) {
     if (twofaStatusText) twofaStatusText.textContent = String(message || "");
+  }
+
+  function setPrivacyStatus(message) {
+    if (privacyStatusText) privacyStatusText.textContent = String(message || "");
   }
 
   function resetAvatarTransform() {
@@ -267,6 +283,7 @@
   }
 
   function getApiBases() {
+    // Prefer most recently successful base first.
     const resolved = (localStorage.getItem("fishbattery.apiBaseResolved") || "").trim();
     const out = [];
     if (resolved && API_BASES.includes(resolved)) out.push(resolved);
@@ -277,6 +294,7 @@
   }
 
   async function request(path, init) {
+    // Request helper with network-level failover only.
     let lastError = new Error("Request failed");
     for (const base of getApiBases()) {
       try {
@@ -308,6 +326,7 @@
   }
 
   async function loadSession() {
+    // Pull current account and initialize all visible sections.
     setStatus("Loading your account...");
     const session = await request("/v1/auth/session", {
       headers: { Authorization: `Bearer ${token}` }
@@ -634,6 +653,77 @@
           setTwofaStatus("Authenticator code is invalid.");
         } else {
           setTwofaStatus("Could not disable authenticator app right now.");
+        }
+      }
+    });
+  }
+
+  if (exportDataBtn) {
+    exportDataBtn.addEventListener("click", async () => {
+      try {
+        setPrivacyStatus("Preparing your data export...");
+        const payload = await request("/v1/account/data-export", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const json = JSON.stringify(payload, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+        a.href = url;
+        a.download = `fishbattery-account-export-${stamp}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        setPrivacyStatus("Data export downloaded.");
+      } catch {
+        setPrivacyStatus("Could not export your data right now. Please try again.");
+      }
+    });
+  }
+
+  if (deleteAccountBtn) {
+    deleteAccountBtn.addEventListener("click", async () => {
+      const acknowledged = window.confirm(
+        "This permanently deletes your Fishbattery account and cloud data. This cannot be undone. Continue?"
+      );
+      if (!acknowledged) return;
+
+      const confirmText = window.prompt('Type DELETE to confirm account deletion.');
+      if (confirmText !== "DELETE") {
+        setPrivacyStatus("Account deletion cancelled.");
+        return;
+      }
+
+      try {
+        setPrivacyStatus("Deleting your account...");
+        const body = { confirm: "DELETE" };
+        if (canChangePassword) {
+          const currentPassword = window.prompt("Enter your current password to confirm deletion.");
+          if (!currentPassword) {
+            setPrivacyStatus("Account deletion cancelled.");
+            return;
+          }
+          body.currentPassword = currentPassword;
+        }
+        await request("/v1/account/delete", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(body)
+        });
+        localStorage.removeItem("fishbattery.token");
+        localStorage.removeItem("fishbattery.account");
+        window.location.href = "./index.html";
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (/current password is incorrect/i.test(message)) {
+          setPrivacyStatus("Current password is incorrect.");
+        } else {
+          setPrivacyStatus("Could not delete account right now. Please try again.");
         }
       }
     });
