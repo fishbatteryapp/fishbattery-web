@@ -344,64 +344,61 @@ h2 {
 }
 
 /* Footer and legal navigation */
-.site-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.footer-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem;
-}
-
-.footer-links a {
-  color: var(--muted);
-  text-decoration: none;
-}
-
-.footer-links a:hover {
-  color: var(--text);
-}
-
+/* Clean footer layout */
 .legal-footer {
   border: 1px solid rgba(89, 168, 219, 0.12);
   background: rgba(7, 18, 31, 0.42);
+  box-shadow: none;
   backdrop-filter: blur(6px);
 
   display: grid;
   grid-template-columns: 1fr auto;
-  align-items: center;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "brand links"
+    "copy  links";
 
+  gap: 0.45rem 1.25rem;
   padding: 1rem 1.2rem;
-  gap: 1rem;
-
-  border-radius: 14px;
+  margin-top: auto;
 }
 
+/* Stop using display: contents so alignment is predictable */
 .legal-main {
-  display: contents;
+  display: block;
 }
 
 .legal-main > strong {
+  grid-area: brand;
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: -0.01em;
 }
 
+/* Left meta line */
+.legal-copy {
+  grid-area: copy;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  color: rgba(158, 194, 221, 0.7);
+  line-height: 1.35;
+}
+
+/* Right links: vertically centered across both rows */
 .legal-links {
+  grid-area: links;
   display: flex;
   align-items: center;
-  gap: 1rem; /* more breathing room */
-
-  font-size: 0.9rem;
+  justify-content: flex-end;
+  gap: 0.95rem;
+  align-self: center;
+  white-space: nowrap;
 }
 
 .legal-links a {
-  color: rgba(158, 194, 221, 0.75);
+  color: rgba(158, 194, 221, 0.78);
   text-decoration: none;
   transition: color 120ms ease;
 }
@@ -410,46 +407,32 @@ h2 {
   color: var(--text);
 }
 
+/* Dots between links (subtle) */
 .legal-links a:not(:last-child)::after {
   content: "•";
-  margin-left: 1rem;
-  opacity: 0.3;
+  margin-left: 0.95rem;
+  opacity: 0.28;
 }
 
-.legal-copy {
-  margin-top: 0.15rem;
+/* Mobile: stack nicely */
+@media (max-width: 680px) {
+  .legal-footer {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "brand"
+      "links"
+      "copy";
+    gap: 0.7rem;
+  }
 
-  font-size: 0.8rem;
-  color: rgba(158, 194, 221, 0.7);
+  .legal-links {
+    justify-content: flex-start;
+    white-space: normal;
+  }
 
-  display: flex;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-}
-
-.legal-copy a {
-  color: var(--muted);
-  text-decoration: none;
-}
-
-.legal-copy a:hover {
-  color: var(--text);
-}
-
-.legal-hint {
-  font-size: 0.75rem;        /* smaller */
-  opacity: 0.7;              /* softer */
-  margin-top: 6px;
-  line-height: 1.4;
-}
-
-.legal-hint a {
-  opacity: 0.9;
-  text-decoration: underline;
-}
-
-.legal-hint a:hover {
-  opacity: 1;
+  .legal-links a:not(:last-child)::after {
+    margin-left: 0.7rem;
+  }
 }
 
 .steps-grid {
