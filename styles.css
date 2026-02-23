@@ -214,6 +214,41 @@ h2 {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+/* About panel: resources */
+.about-panel .lead { margin-bottom: 10px; }
+
+.about-actions{
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.about-actions .btn.subtle{
+  padding: 14px 14px;
+  text-align: left;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  line-height: 1.2;
+}
+
+.about-actions .btn-title{
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.about-actions .btn-sub{
+  opacity: .75;
+  font-size: 13px;
+}
+
+/* Mobile */
+@media (max-width: 820px){
+  .about-actions{ grid-template-columns: 1fr; }
+}
+
 .value-icon {
   width: 44px;
   height: 44px;
