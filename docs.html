@@ -1,70 +1,120 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Docs - Fishbattery</title>
-  <link rel="stylesheet" href="./styles.css" />
-</head>
-<body>
-  <div class="bg"></div>
+  <head>
+    <link rel="icon" type="image/x-icon" href="/assets/Logo transparent.png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Docs - Fishbattery</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
 
-  <main class="page narrow page-legal">
-    <header class="topbar card">
-      <a class="brand" href="./index.html">Fishbattery</a>
-    </header>
+    <main class="page narrow page-legal">
+      <!-- Global site topbar and auth action mount point -->
+      <header class="topbar card">
+        <div class="top-left">
+          <a class="brand" href="./index.html">Fishbattery</a>
+          <nav class="top-links">
+            <a href="./download.html">Download</a>
+            <a href="./docs.html" class="active">Docs</a>
+            <a href="./blog.html">Blog</a>
+            <a href="./help.html">Help</a>
+            <a href="https://discord.gg/yT5zRsRXsf" target="_blank" rel="noreferrer">Discord</a>
+          </nav>
+        </div>
+        <div id="authActions" class="actions"></div>
+      </header>
 
-    <section class="card">
-      <h1>Documentation</h1>
+      <!-- Page header -->
+      <header class="card">
+        <p class="kicker">Resources</p>
+        <h1>Documentation</h1>
+        <p class="lead">Setup guides, mod installation, and optimization tips.</p>
+      </header>
 
-      <h2>Getting Started</h2>
-      <p>
-        Fishbattery is a modern Minecraft launcher built for performance,
-        simplicity, and flexibility. It allows you to install mods, manage
-        instances, and sync your setup across devices.
-      </p>
+      <section class="card legal-content">
+        <article>
+          <h2>Getting started</h2>
+          <p>
+            Fishbattery is a modern Minecraft launcher focused on fast setup, clean UI, and consistent results.
+            This page explains the basics (instances, mod loaders, mods, and syncing) so you can get running quickly.
+          </p>
 
-      <h2>Installing Mods</h2>
-      <p>
-        You can install mods directly through the launcher using Modrinth.
-        Simply create an instance, open it, and browse available mods.
-      </p>
+          <h2>Create an instance</h2>
+          <p>
+            An instance is an isolated Minecraft setup with its own game version, loader, mods, and settings.
+            Creating separate instances keeps modpacks clean and prevents conflicts.
+          </p>
+          <ul>
+            <li>Pick a Minecraft version</li>
+            <li>Select a mod loader (Fabric / NeoForge)</li>
+            <li>Name your instance (e.g. “FPS”, “SMP”, “RLCraft”) </li>
+          </ul>
 
-      <ul>
-        <li>Create a new instance</li>
-        <li>Select Fabric or NeoForge</li>
-        <li>Browse and install mods</li>
-      </ul>
+          <h2>Install mods (Modrinth)</h2>
+          <p>
+            The easiest workflow is: install only a few mods first, launch once, then expand.
+            That makes it obvious which mod caused an issue if something breaks.
+          </p>
+          <ul>
+            <li>Open your instance</li>
+            <li>Browse/search mods</li>
+            <li>Install and launch</li>
+          </ul>
 
-      <h2>Performance Optimization</h2>
-      <p>
-        Fishbattery is designed for performance. For best results:
-      </p>
+          <h2>Recommended performance baseline</h2>
+          <p>
+            If your goal is “smooth FPS with minimal effort”, start with a lightweight performance stack and
+            add visuals later.
+          </p>
+          <ul>
+            <li><strong>Sodium</strong> – rendering performance</li>
+            <li><strong>Lithium</strong> – game logic optimization</li>
+            <li><strong>FerriteCore</strong> – memory usage reduction</li>
+          </ul>
 
-      <ul>
-        <li>Use Sodium for rendering</li>
-        <li>Use Lithium for game logic optimization</li>
-        <li>Limit heavy shader usage</li>
-      </ul>
+          <h2>Cloud sync</h2>
+          <p>
+            When you’re logged in, Fishbattery can sync launcher configuration across devices so your setup feels the same everywhere.
+            If something looks out of date, check your connection and re-open the launcher to trigger a refresh.
+          </p>
 
-      <h2>Cloud Sync</h2>
-      <p>
-        Your launcher settings, instances, and configurations can sync across
-        devices when logged in. This ensures a consistent experience everywhere.
-      </p>
+          <h2>Troubleshooting</h2>
+          <p>
+            If a modded instance won’t launch, the fastest fix is usually to remove the last added mods and try again.
+            For more common issues, see <a href="./help.html">Help & FAQ</a>.
+          </p>
 
-      <h2>Customization</h2>
-      <p>
-        You can customize:
-      </p>
-      <ul>
-        <li>Themes (dark, ocean, OLED, etc.)</li>
-        <li>Accent colors</li>
-        <li>Background images</li>
-        <li>UI layout and styling</li>
-      </ul>
+          <p>
+            Want longer guides? I post updates and tips in the <a href="./blog.html">Blog</a>.
+          </p>
+        </article>
+      </section>
 
-    </section>
-  </main>
-</body>
+      <footer class="card legal-footer">
+        <div class="legal-main">
+          <strong>Fishbattery Launcher</strong>
+      
+          <div class="legal-links">
+            <a href="./download.html">Download</a>
+            <a href="./terms.html">Terms of Service</a>
+            <a href="./privacy.html">Privacy Policy</a>
+            <a href="./legal.html">Legal</a>
+            <a href="https://discord.gg/yT5zRsRXsf" target="_blank" rel="noreferrer">Discord</a>
+            <a href="mailto:support@fishbattery.app">Contact</a>
+          </div>
+        </div>
+      
+        <div class="legal-copy">
+          <span>© Fishbattery • Based in Denmark</span>
+          <span>Not affiliated with Mojang or Microsoft.</span>
+        </div>
+      </footer>
+    </main>
+
+    <!-- Shared consent/nav -->
+    <script src="./consent.js"></script>
+    <script src="./site-nav.js"></script>
+  </body>
 </html>
