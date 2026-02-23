@@ -422,6 +422,11 @@ h2 {
   transform: translateY(-50%);
 }
 
+.legal-links .sep { 
+  opacity:.5;
+  user-select:none;
+}
+
 .legal-links a:hover {
   color: var(--text);
 }
