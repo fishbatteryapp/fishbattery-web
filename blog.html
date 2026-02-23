@@ -1,60 +1,103 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Blog - Fishbattery</title>
-  <link rel="stylesheet" href="./styles.css" />
-</head>
-<body>
-  <div class="bg"></div>
+  <head>
+    <link rel="icon" type="image/x-icon" href="/assets/Logo transparent.png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog - Fishbattery</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
 
-  <main class="page narrow page-legal">
-    <header class="topbar card">
-      <a class="brand" href="./index.html">Fishbattery</a>
-    </header>
+    <main class="page narrow page-legal">
+      <!-- Global site topbar and auth action mount point -->
+      <header class="topbar card">
+        <div class="top-left">
+          <a class="brand" href="./index.html">Fishbattery</a>
+          <nav class="top-links">
+            <a href="./download.html">Download</a>
+            <a href="./docs.html">Docs</a>
+            <a href="./blog.html" class="active">Blog</a>
+            <a href="./help.html">Help</a>
+            <a href="https://discord.gg/yT5zRsRXsf" target="_blank" rel="noreferrer">Discord</a>
+          </nav>
+        </div>
+        <div id="authActions" class="actions"></div>
+      </header>
 
-    <section class="card">
-      <h1>Blog</h1>
+      <!-- Page header -->
+      <header class="card">
+        <p class="kicker">Resources</p>
+        <h1>Blog</h1>
+        <p class="lead">Updates, guides, and performance tips for modded Minecraft.</p>
+      </header>
 
-      <article>
-        <h2>Why Fishbattery Exists</h2>
-        <p>
-          Fishbattery was built to solve a simple problem: most Minecraft launchers
-          are either too slow, too cluttered, or too limited.
-        </p>
-        <p>
-          The goal is to create a launcher that feels modern, fast, and fully customizable,
-          while still being simple enough for anyone to use.
-        </p>
-      </article>
+      <section class="card legal-content">
+        <article>
+          <h2>Why Fishbattery exists</h2>
+          <p>
+            Fishbattery was built to solve a simple problem: most Minecraft launchers are either too slow,
+            too cluttered, or too limited. The goal is a launcher that feels modern, fast, and fully customizable —
+            while still being simple enough for anyone to use.
+          </p>
 
-      <article>
-        <h2>Best Performance Mods (2026)</h2>
-        <p>
-          If you want the best FPS in Minecraft, these mods are essential:
-        </p>
-        <ul>
-          <li>Sodium – rendering performance</li>
-          <li>Lithium – game optimization</li>
-          <li>FerriteCore – memory usage reduction</li>
-        </ul>
-      </article>
+          <h2>Best performance mods (2026)</h2>
+          <p>
+            If you want the best FPS in Minecraft, these mods are a solid baseline for most setups:
+          </p>
+          <ul>
+            <li><strong>Sodium</strong> – rendering performance</li>
+            <li><strong>Lithium</strong> – game optimization</li>
+            <li><strong>FerriteCore</strong> – memory usage reduction</li>
+          </ul>
+          <p>
+            Tip: add visuals (shaders, high-res resource packs) only after you’re stable.
+            If you need setup steps, see <a href="./docs.html">Docs</a>.
+          </p>
 
-      <article>
-        <h2>What Makes Fishbattery Different</h2>
-        <p>
-          Unlike traditional launchers, Fishbattery focuses on:
-        </p>
-        <ul>
-          <li>Clean UI and modern design</li>
-          <li>Cross-device syncing</li>
-          <li>Advanced customization</li>
-          <li>Optional premium features</li>
-        </ul>
-      </article>
+          <h2>What makes Fishbattery different</h2>
+          <p>
+            Unlike traditional launchers, Fishbattery focuses on:
+          </p>
+          <ul>
+            <li>Clean UI and modern design</li>
+            <li>Cross-device syncing</li>
+            <li>Advanced customization</li>
+            <li>Optional premium features</li>
+          </ul>
 
-    </section>
-  </main>
-</body>
+          <h2>Updates</h2>
+          <p>
+            This page will gradually become a proper changelog + guides hub.
+            For now, if you’re looking for a specific answer, check <a href="./help.html">Help</a> or join the Discord.
+          </p>
+        </article>
+      </section>
+
+      <footer class="card legal-footer">
+        <div class="legal-main">
+          <strong>Fishbattery Launcher</strong>
+      
+          <div class="legal-links">
+            <a href="./download.html">Download</a>
+            <a href="./terms.html">Terms of Service</a>
+            <a href="./privacy.html">Privacy Policy</a>
+            <a href="./legal.html">Legal</a>
+            <a href="https://discord.gg/yT5zRsRXsf" target="_blank" rel="noreferrer">Discord</a>
+            <a href="mailto:support@fishbattery.app">Contact</a>
+          </div>
+        </div>
+      
+        <div class="legal-copy">
+          <span>© Fishbattery • Based in Denmark</span>
+          <span>Not affiliated with Mojang or Microsoft.</span>
+        </div>
+      </footer>
+    </main>
+
+    <!-- Shared consent/nav -->
+    <script src="./consent.js"></script>
+    <script src="./site-nav.js"></script>
+  </body>
 </html>
