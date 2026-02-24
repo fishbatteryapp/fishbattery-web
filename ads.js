@@ -67,34 +67,47 @@
 
   // Ensure fallback markup exists, then apply ad content.
   function applyAdToSlot(slot, ad) {
-    // Create fallback UI if it doesn't exist (so your HTML can stay AdSense-only)
     let wrap = slot.querySelector(".sponsored-fallback");
     if (!wrap) {
       wrap = document.createElement("div");
       wrap.className = "sponsored-fallback";
-
       wrap.innerHTML = `
         <div class="sponsored-fallback-inner">
-          
-          <div class="sponsored-meta">
-            <span class="sponsored-label">Sponsored</span>
-            <span class="sponsored-media"></span>
+          <div class="sponsored-fallback-meta">
+            <span class="sponsored-fallback-label">Sponsored</span>
+            <span class="sponsored-fallback-media"></span>
           </div>
-      
-          <div class="sponsored-title"></div>
-          <div class="sponsored-body"></div>
-      
-          <div class="sponsored-actions">
-            <a class="btn sponsored-cta" href="#" target="_blank" rel="noreferrer">Learn more</a>
+  
+          <div class="sponsored-fallback-title"></div>
+          <div class="sponsored-fallback-body"></div>
+  
+          <div class="sponsored-fallback-actions">
+            <a class="btn sponsored-fallback-cta" href="#" target="_blank" rel="noreferrer">Learn more</a>
           </div>
-      
         </div>
       `;
-
-      // Put fallback inside the AdSense wrapper so it sits where the ad would be.
+  
+      // Put fallback exactly where ads would render
       const host = slot.querySelector(".sponsored-adsense-wrap") || slot;
       host.appendChild(wrap);
     }
+  
+    // Fill
+    const mediaEl = wrap.querySelector(".sponsored-fallback-media");
+    const titleEl = wrap.querySelector(".sponsored-fallback-title");
+    const bodyEl = wrap.querySelector(".sponsored-fallback-body");
+    const ctaEl = wrap.querySelector(".sponsored-fallback-cta");
+    const kickerEl = slot.querySelector(".sponsored-kicker");
+  
+    if (mediaEl) mediaEl.textContent = ad.media ? `— ${ad.media}` : "";
+    if (titleEl) titleEl.textContent = ad.title;
+    if (bodyEl) bodyEl.textContent = ad.body;
+    if (ctaEl) {
+      ctaEl.textContent = ad.cta || "Learn more";
+      ctaEl.href = ad.link;
+    }
+    if (kickerEl) kickerEl.textContent = ad.media ? `Sponsored — ${ad.media}` : "Sponsored";
+  }
 
     // Fill content
     const titleEl = wrap.querySelector(".sponsored-title");
