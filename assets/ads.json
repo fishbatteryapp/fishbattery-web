@@ -5,7 +5,7 @@
     {
       "id": "hostcraft-modded",
       "active": true,
-      "placements": ["launcher-sidebar", "website-home-main", "website-download-main"],
+      "placements": ["launcher-sidebar", "website-home-main", "website-download-main", "website-home-main"],
       "title": "Sponsored: Modded Server Hosting",
       "body": "Launch Minecraft servers with one-click backups, instant rollback, and Fabric/Forge templates.",
       "cta": "View hosting plans",
@@ -15,7 +15,7 @@
     {
       "id": "packstudio-tooling",
       "active": true,
-      "placements": ["launcher-sidebar", "website-home-main"],
+      "placements": ["launcher-sidebar", "website-home-main", "website-home-main"],
       "title": "Sponsored: Texture Pack Studio",
       "body": "Build, test, and export resource packs with a lightweight desktop workflow.",
       "cta": "See pack workflow",
@@ -25,7 +25,7 @@
     {
       "id": "worldhub-curated",
       "active": true,
-      "placements": ["launcher-sidebar", "website-download-main"],
+      "placements": ["launcher-sidebar", "website-download-main", "website-home-main"],
       "title": "Sponsored: Curated Adventure Worlds",
       "body": "Explore tested maps and modpacks tuned for smooth setup in Fishbattery.",
       "cta": "Browse highlights",
