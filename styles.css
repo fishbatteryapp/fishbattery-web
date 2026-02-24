@@ -882,8 +882,8 @@ input[type="file"]::-webkit-file-upload-button:hover {
   overflow: auto;
 }
 
-.hidden {
-  display: none;
+.hidden { 
+  display: none !important; 
 }
 
 .consent-banner {
