@@ -75,14 +75,19 @@
 
       wrap.innerHTML = `
         <div class="sponsored-fallback-inner">
-          <div class="sponsored-fallback-top">
-            <div class="sponsored-title"></div>
-            <div class="sponsored-media"></div>
+          
+          <div class="sponsored-meta">
+            <span class="sponsored-label">Sponsored</span>
+            <span class="sponsored-media"></span>
           </div>
+      
+          <div class="sponsored-title"></div>
           <div class="sponsored-body"></div>
-          <div class="sponsored-fallback-actions">
+      
+          <div class="sponsored-actions">
             <a class="btn sponsored-cta" href="#" target="_blank" rel="noreferrer">Learn more</a>
           </div>
+      
         </div>
       `;
 
