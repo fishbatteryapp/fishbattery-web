@@ -1,3 +1,17 @@
+function isTestMode() {
+  try {
+    const qp = new URLSearchParams(window.location.search);
+    if (qp.get("ads_test") === "1") return true;
+    if (localStorage.getItem("fishbattery.ads.test") === "1") return true;
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
+let fallbackTimer = null;
+let fallbackRendered = false;
+
 async function renderAdsenseSlots() {
   await loadAdsenseScript();
 
@@ -9,6 +23,8 @@ async function renderAdsenseSlots() {
   for (const slot of slots) {
     const adElement = slot.querySelector("ins.adsbygoogle");
     if (!adElement) continue;
+
+    // Skip already rendered
     if (adElement.getAttribute("data-adsbygoogle-status")) continue;
 
     try {
@@ -23,12 +39,27 @@ async function renderAdsenseSlots() {
 }
 
 async function renderForConsentState(consented) {
+  // reset per-run state
+  fallbackRendered = false;
+  if (fallbackTimer) {
+    clearTimeout(fallbackTimer);
+    fallbackTimer = null;
+  }
+
   if (!consented) {
     for (const slot of slots) slot.classList.add("hidden");
     return;
   }
 
   for (const slot of slots) slot.classList.remove("hidden");
+
+  // ✅ TEST MODE: bypass AdSense entirely so you can test UI without authorization
+  if (isTestMode()) {
+    const ads = await loadFeed();
+    renderFallback(ads);
+    fallbackRendered = true;
+    return;
+  }
 
   try {
     const count = await renderAdsenseSlots();
@@ -37,26 +68,35 @@ async function renderForConsentState(consented) {
     if (!count) {
       const ads = await loadFeed();
       renderFallback(ads);
+      fallbackRendered = true;
       return;
     }
 
-    // If AdSense pushes but doesn't fill, we can still fallback after a short delay:
-    setTimeout(async () => {
-      // If every ins is still empty-ish, fallback.
+    // If AdSense pushes but doesn't fill, fallback after a short delay.
+    fallbackTimer = setTimeout(async () => {
+      if (fallbackRendered) return;
+
       const anyFilled = slots.some((slot) => {
         const ins = slot.querySelector("ins.adsbygoogle");
         if (!ins) return false;
-        // Google sets this when it decides something; empty slots often remain tiny.
-        return ins.getAttribute("data-adsbygoogle-status") === "done" || ins.offsetHeight > 40;
+
+        const status = ins.getAttribute("data-adsbygoogle-status") || "";
+        // Common statuses: "done", "unfilled", etc.
+        if (status) return status === "done"; // only treat "done" as filled
+
+        // Heuristic: if it gained height, it's probably filled
+        return ins.offsetHeight >= 50;
       });
 
       if (!anyFilled) {
         const ads = await loadFeed();
         renderFallback(ads);
+        fallbackRendered = true;
       }
     }, 1500);
   } catch {
     const ads = await loadFeed();
     renderFallback(ads);
+    fallbackRendered = true;
   }
 }
