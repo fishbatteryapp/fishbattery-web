@@ -1778,9 +1778,10 @@ input[type="file"]::-webkit-file-upload-button:hover {
 }
 
 /* Public profile page */
-.profile-page .page.narrow {
-  max-width: 1080px;
+.profile-page .page {
+  max-width: 1180px;
   margin: 0 auto;
+  gap: 1.15rem;
 }
 
 .profile-layout {
