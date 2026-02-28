@@ -1,4 +1,4 @@
-(function initSponsoredAds() {
+﻿(function initSponsoredAds() {
   // Purpose:
   // Render sponsored slots in a consent-aware way.
   //
@@ -99,34 +99,16 @@
     const ctaEl = wrap.querySelector(".sponsored-fallback-cta");
     const kickerEl = slot.querySelector(".sponsored-kicker");
   
-    if (mediaEl) mediaEl.textContent = ad.media ? `— ${ad.media}` : "";
+    if (mediaEl) mediaEl.textContent = ad.media ? `- ${ad.media}` : "";
     if (titleEl) titleEl.textContent = ad.title;
     if (bodyEl) bodyEl.textContent = ad.body;
     if (ctaEl) {
       ctaEl.textContent = ad.cta || "Learn more";
       ctaEl.href = ad.link;
     }
-    if (kickerEl) kickerEl.textContent = ad.media ? `Sponsored — ${ad.media}` : "Sponsored";
+    if (kickerEl) kickerEl.textContent = ad.media ? `Sponsored - ${ad.media}` : "Sponsored";
   }
 
-    // Fill content
-    const titleEl = wrap.querySelector(".sponsored-title");
-    const bodyEl = wrap.querySelector(".sponsored-body");
-    const ctaEl = wrap.querySelector(".sponsored-cta");
-    const mediaEl = wrap.querySelector(".sponsored-media");
-    const kickerEl = slot.querySelector(".sponsored-kicker");
-
-    if (titleEl) titleEl.textContent = ad.title;
-    if (bodyEl) bodyEl.textContent = ad.body;
-    if (mediaEl) mediaEl.textContent = ad.media ? `via ${ad.media}` : "";
-    if (ctaEl) {
-      ctaEl.textContent = ad.cta || "Learn more";
-      ctaEl.href = ad.link;
-      ctaEl.setAttribute("target", "_blank");
-      ctaEl.setAttribute("rel", "noreferrer");
-    }
-    if (kickerEl) kickerEl.textContent = ad.media ? `Sponsored — ${ad.media}` : "Sponsored";
-  }
 
   // Render fallback ads into all slots when feed data is available.
   function renderFallback(ads, { hideAdsenseIns = false } = {}) {
@@ -266,6 +248,10 @@
         const anyFilled = slots.some((slot) => {
           const ins = slot.querySelector("ins.adsbygoogle");
           if (!ins) return false;
+
+          // Explicit unfilled signal from AdSense should always trigger fallback.
+          const adStatus = (ins.getAttribute("data-ad-status") || "").toLowerCase();
+          if (adStatus === "unfilled") return false;
 
           const status = ins.getAttribute("data-adsbygoogle-status") || "";
           // Treat only "done" as filled; others can be "unfilled"
