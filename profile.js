@@ -1,10 +1,7 @@
 // Public profile page renderer.
 // Input:
-// - Preferred: stable profile id from `?u=...` query parameter (fetched from API).
-// - Legacy fallback: compact snapshot payload from `?p=...`.
-// Behavior:
-// - Renders a read-only public profile.
-// - Shows "Profile not found" when id/payload cannot be resolved.
+// - Preferred: stable profile id from ?u=... (fetched from API).
+// - Legacy fallback: compact snapshot payload from ?p=....
 
 const PUBLIC_API_BASE = "https://fishbattery-auth-api-production.up.railway.app";
 const isLocalDev =
@@ -45,7 +42,6 @@ async function requestPublicProfile(shareId) {
 }
 
 function decodePayload(raw) {
-  // Payload is URL-safe base64; normalize to standard base64 first.
   const normalized = String(raw || "")
     .replace(/-/g, "+")
     .replace(/_/g, "/");
@@ -61,13 +57,29 @@ function decodePayload(raw) {
 }
 
 function text(el, value) {
-  // Small null-safe text setter helper.
   if (!el) return;
   el.textContent = String(value ?? "");
 }
 
+function initialsFor(name) {
+  const cleaned = String(name || "").trim();
+  if (!cleaned) return "FP";
+  return cleaned
+    .split(/\s+/)
+    .map((part) => part[0] || "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function formatTierLabel(tierRaw) {
+  const tier = String(tierRaw || "free").trim().toLowerCase();
+  if (tier === "founder") return "Founder";
+  if (tier === "premium") return "Premium";
+  return "Free";
+}
+
 function render() {
-  // Resolve payload from URL query.
   const params = new URLSearchParams(window.location.search);
   const shareId = String(params.get("u") || params.get("id") || "").trim();
   const payloadRaw = params.get("p");
@@ -81,24 +93,43 @@ function render() {
       return;
     }
     if (missing) missing.style.display = "none";
-    if (root) root.style.display = "";
+    if (root) root.style.display = "grid";
 
     const name = payload.player?.displayName || "Fishbattery Player";
-    const tier = payload.player?.tier || "free";
-    const generatedAt = payload.generatedAt ? new Date(payload.generatedAt).toLocaleString() : "Unknown";
-    text(document.getElementById("profileName"), name);
-    text(document.getElementById("profileMeta"), `Tier: ${tier} | Shared: ${generatedAt}`);
+    const tier = formatTierLabel(payload.player?.tier);
+    const generatedAt = payload.generatedAt
+      ? new Date(payload.generatedAt).toLocaleString()
+      : "Unknown";
 
-    // Summary cards shown at top of profile.
+    text(document.getElementById("profileName"), name);
+    text(document.getElementById("profileMeta"), `Shared on ${generatedAt}`);
+    text(document.getElementById("profileTierBadge"), tier);
+
+    const avatarUrl = String(payload.player?.avatarUrl || "").trim();
+    const avatar = document.getElementById("profileAvatar");
+    const avatarFallback = document.getElementById("profileAvatarFallback");
+    if (avatar && avatarFallback) {
+      if (avatarUrl) {
+        avatar.src = avatarUrl;
+        avatar.classList.remove("hidden");
+        avatarFallback.classList.add("hidden");
+      } else {
+        avatar.removeAttribute("src");
+        avatar.classList.add("hidden");
+        avatarFallback.classList.remove("hidden");
+        avatarFallback.textContent = initialsFor(name);
+      }
+    }
+
     const stats = [
       ["Playtime", payload.totals?.playtime ?? "0m"],
-      ["Installed Mods", payload.totals?.installedMods ?? 0],
+      ["Installed mods", payload.totals?.installedMods ?? 0],
       ["Instances", payload.totals?.instances ?? 0],
       ["Sessions", payload.totals?.sessions ?? 0],
-      ["Active Preset", payload.activePreset ?? "None"],
+      ["Active preset", payload.activePreset ?? "None"],
       [
-        "Hardware (Public)",
-        `${payload.hardware?.cpuCores ?? "?"} cores / ${payload.hardware?.ram ?? "?"} RAM / GPU ${payload.hardware?.gpu ?? "Unknown"}`
+        "Hardware",
+        `${payload.hardware?.cpuCores ?? "?"} cores / ${payload.hardware?.ram ?? "?"} RAM / GPU ${payload.hardware?.gpu ?? "Detected"}`
       ]
     ];
 
@@ -106,56 +137,57 @@ function render() {
     if (statsRoot) {
       statsRoot.innerHTML = "";
       for (const [label, value] of stats) {
-        const card = document.createElement("div");
-        card.className = "account-card";
-        card.style.padding = "12px";
-        const h = document.createElement("strong");
+        const card = document.createElement("article");
+        card.className = "profile-stat-card";
+
+        const h = document.createElement("h3");
+        h.className = "profile-stat-label";
         h.textContent = String(label);
+
         const p = document.createElement("p");
-        p.className = "lead";
-        p.style.marginTop = "6px";
+        p.className = "profile-stat-value";
         p.textContent = String(value);
-        card.appendChild(h);
-        card.appendChild(p);
+
+        card.append(h, p);
         statsRoot.appendChild(card);
       }
     }
 
-    // Benchmark summary line.
     const bm = payload.benchmark;
     text(
       document.getElementById("profileBenchmark"),
       bm
         ? `${bm.avgFps} FPS avg / ${bm.low1Fps} 1% low (${bm.profile}) on ${bm.instanceName}`
-        : "No benchmark available."
+        : "No benchmark data was shared for this profile."
     );
 
-    // Per-setup rows section.
     const setupsRoot = document.getElementById("profileSetups");
     if (setupsRoot) {
       setupsRoot.innerHTML = "";
       const setups = Array.isArray(payload.setups) ? payload.setups : [];
+
       if (!setups.length) {
-        const p = document.createElement("p");
-        p.className = "lead";
-        p.textContent = "No setups shared.";
-        setupsRoot.appendChild(p);
+        const empty = document.createElement("p");
+        empty.className = "hint";
+        empty.textContent = "No setups shared.";
+        setupsRoot.appendChild(empty);
       } else {
         for (const setup of setups) {
-          const row = document.createElement("div");
-          row.className = "account-card";
-          row.style.padding = "10px 12px";
-          const title = document.createElement("strong");
+          const card = document.createElement("article");
+          card.className = "profile-setup-card";
+
+          const title = document.createElement("h3");
+          title.className = "profile-setup-title";
           title.textContent = `${setup.name || "Instance"} (${setup.version || "unknown"} ${setup.loader || "loader"})`;
+
           const meta = document.createElement("p");
-          meta.className = "lead";
-          meta.style.marginTop = "4px";
+          meta.className = "profile-setup-meta";
           meta.textContent =
             `${setup.installedMods ?? 0} mods | ${setup.playtime ?? "0m"} | ${setup.preset || "None"}` +
             (setup.benchmarkFps != null ? ` | ${setup.benchmarkFps} FPS` : "");
-          row.appendChild(title);
-          row.appendChild(meta);
-          setupsRoot.appendChild(row);
+
+          card.append(title, meta);
+          setupsRoot.appendChild(card);
         }
       }
     }
@@ -174,12 +206,12 @@ function render() {
     return;
   }
 
-  // Legacy payload links are still supported.
   if (!payloadRaw) {
     if (missing) missing.style.display = "";
     if (root) root.style.display = "none";
     return;
   }
+
   try {
     renderPayload(decodePayload(payloadRaw));
   } catch {

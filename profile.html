@@ -10,41 +10,69 @@
     <link rel="canonical" href="https://fishbattery.app/profile.html" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body>
-    <!-- Public profile shell used for shared launcher profile links -->
-    <main class="account-shell" style="max-width: 980px">
-      <!-- Intro card -->
-      <section class="account-card">
-        <h1>Fishbattery Public Profile</h1>
-        <p class="lead">Shared launcher profile snapshot.</p>
+  <body class="profile-page">
+    <div class="bg"></div>
+    <main class="page narrow">
+      <header class="topbar card">
+        <div class="top-left">
+          <a class="brand" href="./index.html">Fishbattery</a>
+          <nav class="top-links">
+            <a href="./download.html">Download</a>
+            <a href="https://discord.gg/yT5zRsRXsf" target="_blank" rel="noreferrer">Discord</a>
+          </nav>
+        </div>
+        <div id="authActions" class="actions"></div>
+      </header>
+
+      <section id="profileMissing" class="card profile-missing" style="display: none">
+        <p class="kicker">Public profile</p>
+        <h1>Profile not found</h1>
+        <p class="lead">This link is invalid, private, or no longer available.</p>
+        <div class="actions">
+          <a class="btn" href="./index.html">Back to home</a>
+        </div>
       </section>
 
-      <!-- Empty state when token/payload cannot be resolved -->
-      <section id="profileMissing" class="account-card" style="display: none">
-        <h2>Profile not found</h2>
-        <p class="lead">
-          This profile link is invalid or expired.
-        </p>
-      </section>
+      <section id="profileRoot" class="profile-layout" style="display: none">
+        <header class="card profile-hero">
+          <div class="profile-identity">
+            <div id="profileAvatarWrap" class="profile-avatar-wrap">
+              <img id="profileAvatar" class="profile-avatar hidden" alt="Profile avatar" />
+              <span id="profileAvatarFallback" class="profile-avatar-fallback">FP</span>
+            </div>
+            <div class="profile-identity-copy">
+              <p class="kicker">Public launcher profile</p>
+              <h1 id="profileName">Fishbattery Player</h1>
+              <p id="profileMeta" class="lead"></p>
+              <div class="profile-badges">
+                <span id="profileTierBadge" class="profile-tier-badge">Free</span>
+                <span class="profile-subtle-pill">Shared setup snapshot</span>
+              </div>
+            </div>
+          </div>
+        </header>
 
-      <!-- Main profile content -->
-      <section id="profileRoot" class="account-card" style="display: none">
-        <h2 id="profileName">Player</h2>
-        <p id="profileMeta" class="lead"></p>
+        <section class="card">
+          <h2>Overview</h2>
+          <div id="profileStats" class="profile-stats-grid"></div>
+        </section>
 
-        <div id="profileStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px"></div>
-
-        <div style="margin-top: 14px">
-          <h3>Benchmark</h3>
+        <section class="card profile-benchmark-card">
+          <div class="profile-benchmark-head">
+            <h2>Benchmark</h2>
+            <span class="profile-subtle-pill">Latest shared result</span>
+          </div>
           <p id="profileBenchmark" class="lead"></p>
-        </div>
+        </section>
 
-        <div style="margin-top: 14px">
-          <h3>Installed Setups</h3>
-          <div id="profileSetups" style="display: grid; gap: 8px"></div>
-        </div>
+        <section class="card">
+          <h2>Installed setups</h2>
+          <p class="hint">Instances this user chose to share.</p>
+          <div id="profileSetups" class="profile-setups-grid"></div>
+        </section>
       </section>
-            <footer class="card legal-footer">
+
+      <footer class="card legal-footer">
         <div class="legal-main">
           <strong>Fishbattery Launcher</strong>
       
@@ -60,14 +88,14 @@
         </div>
       
         <div class="legal-copy">
-          <span>© Fishbattery • Based in Denmark</span>
+          <span>(c) Fishbattery | Based in Denmark</span>
           <span>Not affiliated with Mojang or Microsoft.</span>
         </div>
       </footer>
     </main>
 
-    <!-- Shared consent + page-specific profile renderer -->
     <script src="./consent.js"></script>
+    <script src="./site-nav.js"></script>
     <script type="module" src="./profile.js"></script>
   </body>
-  </html>
+</html>
