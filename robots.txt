@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /account.html
+Disallow: /login.html
+Disallow: /upgrade.html
+Disallow: /profile.html
+
+Sitemap: https://fishbattery.app/sitemap.xml
