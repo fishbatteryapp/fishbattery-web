@@ -96,24 +96,34 @@
 
   // Validate token by calling session endpoint on available API bases.
   async function tryRestoreAccountFromToken(token) {
+    let sawTransientFailure = false;
     for (const base of getApiBases()) {
       try {
         const res = await fetch(`${base}/v1/auth/session`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (!res.ok) continue;
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            return { status: "invalid", account: null };
+          }
+          sawTransientFailure = true;
+          continue;
+        }
         const data = await res.json();
         const account = data?.account;
-        if (!account) continue;
+        if (!account) {
+          sawTransientFailure = true;
+          continue;
+        }
         // Persist successful base and account cache.
         localStorage.setItem("fishbattery.apiBaseResolved", base);
         localStorage.setItem("fishbattery.account", JSON.stringify(account));
-        return account;
+        return { status: "ok", account };
       } catch {
-        // try next base
+        sawTransientFailure = true;
       }
     }
-    return null;
+    return { status: sawTransientFailure ? "transient" : "invalid", account: null };
   }
 
   // Logged-in rendering:
@@ -160,13 +170,29 @@
   setSponsoredVisibility(true);
   container.innerHTML = `<span class="hint">Restoring session...</span>`;
   // Resolve final nav state after token validation.
-  tryRestoreAccountFromToken(token).then((account) => {
-    if (account) {
-      renderLoggedIn(account);
-    } else {
+  tryRestoreAccountFromToken(token).then((result) => {
+    if (result.status === "ok" && result.account) {
+      renderLoggedIn(result.account);
+      return;
+    }
+
+    if (result.status === "invalid") {
       clearSession();
       renderLoggedOut();
+      return;
     }
+
+    // Transient failure: keep current token and, if available, render cached account.
+    try {
+      const cached = JSON.parse(localStorage.getItem("fishbattery.account") || "null");
+      if (cached && typeof cached === "object") {
+        renderLoggedIn(cached);
+        return;
+      }
+    } catch {
+      // fall through to logged-out rendering without clearing session
+    }
+    renderLoggedOut();
   });
 })();
 

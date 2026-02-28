@@ -52,10 +52,30 @@
     ? [PUBLIC_API_BASE, "http://localhost:3000"]
     : [PUBLIC_API_BASE];
 
-  const token = (localStorage.getItem("fishbattery.token") || "").trim();
-  if (!token) {
+  let authToken = (localStorage.getItem("fishbattery.token") || "").trim();
+  if (!authToken) {
     window.location.href = "./login.html";
     return;
+  }
+
+  function setAuthToken(nextToken) {
+    const normalized = String(nextToken || "").trim();
+    if (!normalized) return;
+    authToken = normalized;
+    localStorage.setItem("fishbattery.token", normalized);
+  }
+
+  function isAuthInvalidError(error) {
+    const statusCode = Number(error?.statusCode || 0);
+    const message = String(error?.message || error || "").toLowerCase();
+    return (
+      statusCode === 401 ||
+      statusCode === 403 ||
+      message.includes("unauthorized") ||
+      message.includes("forbidden") ||
+      message.includes("token expired") ||
+      message.includes("invalid token")
+    );
   }
 
   let pendingAvatarData = null;
@@ -250,7 +270,7 @@
   async function refreshTwofaStatus() {
     if (!canChangePassword) return;
     const status = await request("/v1/account/2fa/status", {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${authToken}` }
     });
     twoFactorEnabled = !!status?.enabled;
     renderTwofaUi();
@@ -277,7 +297,9 @@
       // text response
     }
     if (!response.ok) {
-      throw new Error(typeof parsed === "string" ? parsed : JSON.stringify(parsed, null, 2));
+      const err = new Error(typeof parsed === "string" ? parsed : JSON.stringify(parsed, null, 2));
+      err.statusCode = Number(response.status || 0);
+      throw err;
     }
     return parsed;
   }
@@ -329,7 +351,7 @@
     // Pull current account and initialize all visible sections.
     setStatus("Loading your account...");
     const session = await request("/v1/auth/session", {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${authToken}` }
     });
     const account = session?.account;
     if (!account) throw new Error("Could not load account");
@@ -458,11 +480,11 @@
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${authToken}`
         },
         body: JSON.stringify(body)
       });
-      if (updated?.accessToken) localStorage.setItem("fishbattery.token", updated.accessToken);
+      if (updated?.accessToken) setAuthToken(updated.accessToken);
       if (updated?.account) localStorage.setItem("fishbattery.account", JSON.stringify(updated.account));
 
       clearAvatar = false;
@@ -510,11 +532,11 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${authToken}`
           },
           body: JSON.stringify({ currentPassword, newPassword })
         });
-        if (updated?.accessToken) localStorage.setItem("fishbattery.token", updated.accessToken);
+        if (updated?.accessToken) setAuthToken(updated.accessToken);
         if (updated?.account) localStorage.setItem("fishbattery.account", JSON.stringify(updated.account));
 
         if (currentPasswordInput) currentPasswordInput.value = "";
@@ -548,7 +570,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${authToken}`
           },
           body: JSON.stringify({})
         });
@@ -587,11 +609,11 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${authToken}`
           },
           body: JSON.stringify({ code })
         });
-        if (data?.accessToken) localStorage.setItem("fishbattery.token", data.accessToken);
+        if (data?.accessToken) setAuthToken(data.accessToken);
         if (data?.account) localStorage.setItem("fishbattery.account", JSON.stringify(data.account));
         hideTwofaSetupPanel();
         setTwofaStatus("Authenticator app enabled.");
@@ -636,11 +658,11 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${authToken}`
           },
           body: JSON.stringify({ currentPassword, code })
         });
-        if (data?.accessToken) localStorage.setItem("fishbattery.token", data.accessToken);
+        if (data?.accessToken) setAuthToken(data.accessToken);
         if (data?.account) localStorage.setItem("fishbattery.account", JSON.stringify(data.account));
         hideTwofaDisablePanel();
         setTwofaStatus("Authenticator app disabled.");
@@ -663,7 +685,7 @@
       try {
         setPrivacyStatus("Preparing your data export...");
         const payload = await request("/v1/account/data-export", {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${authToken}` }
         });
         const json = JSON.stringify(payload, null, 2);
         const blob = new Blob([json], { type: "application/json" });
@@ -711,7 +733,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${authToken}`
           },
           body: JSON.stringify(body)
         });
@@ -729,10 +751,14 @@
     });
   }
 
-  loadSession().catch(() => {
-    localStorage.removeItem("fishbattery.token");
-    localStorage.removeItem("fishbattery.account");
-    window.location.href = "./login.html";
+  loadSession().catch((error) => {
+    if (isAuthInvalidError(error)) {
+      localStorage.removeItem("fishbattery.token");
+      localStorage.removeItem("fishbattery.account");
+      window.location.href = "./login.html";
+      return;
+    }
+    setStatus("Could not verify your session right now. Check your connection and retry.");
   });
 })();
 

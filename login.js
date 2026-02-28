@@ -75,9 +75,24 @@
       // plain text response
     }
     if (!res.ok) {
-      throw new Error(typeof data === "string" ? data : JSON.stringify(data, null, 2));
+      const err = new Error(typeof data === "string" ? data : JSON.stringify(data, null, 2));
+      err.statusCode = Number(res.status || 0);
+      throw err;
     }
     return data;
+  }
+
+  function isAuthInvalidError(error) {
+    const statusCode = Number(error?.statusCode || 0);
+    const message = String(error?.message || error || "").toLowerCase();
+    return (
+      statusCode === 401 ||
+      statusCode === 403 ||
+      message.includes("unauthorized") ||
+      message.includes("forbidden") ||
+      message.includes("token expired") ||
+      message.includes("invalid token")
+    );
   }
 
   // Order API bases so previously successful one is tried first.
@@ -132,8 +147,8 @@
       });
       if (data?.account) localStorage.setItem("fishbattery.account", JSON.stringify(data.account));
       window.location.href = "./account.html";
-    } catch {
-      clearSession();
+    } catch (error) {
+      if (isAuthInvalidError(error)) clearSession();
     }
   }
 
