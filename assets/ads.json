@@ -4,13 +4,12 @@
   "ads": [
     {
       "id": "Your ad here",
+      "active": true,
+      "placements": ["launcher-sidebar", "website-download-main", "website-home-main"],
       "title": "Sponsored: Your brand name here",
       "body": "Want to reach an engaged Minecraft audience? Advertise in Fishbattery Launcher.",
       "cta": "Get in touch",
       "media": "Advertise",
-      "partner": "Fishbattery Partner",
-      "imageUrl": null,
-      "mediaBg": null,
       "link": "https://fishbattery.app"
     }
   ]
