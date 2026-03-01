@@ -3,34 +3,15 @@
   "updatedAt": "2026-02-14T00:00:00Z",
   "ads": [
     {
-      "id": "hostcraft-modded",
-      "active": true,
-      "placements": ["launcher-sidebar", "website-home-main", "website-download-main", "website-home-main"],
-      "title": "Sponsored: Modded Server Hosting",
-      "body": "Launch Minecraft servers with one-click backups, instant rollback, and Fabric/Forge templates.",
-      "cta": "View hosting plans",
-      "media": "Hosting",
-      "link": "https://fishbatteryapp.github.io/fishbattery-web/download.html"
-    },
-    {
-      "id": "packstudio-tooling",
-      "active": true,
-      "placements": ["launcher-sidebar", "website-home-main", "website-home-main"],
-      "title": "Sponsored: Texture Pack Studio",
-      "body": "Build, test, and export resource packs with a lightweight desktop workflow.",
-      "cta": "See pack workflow",
-      "media": "Studio",
-      "link": "https://fishbatteryapp.github.io/fishbattery-web/"
-    },
-    {
-      "id": "worldhub-curated",
-      "active": true,
-      "placements": ["launcher-sidebar", "website-download-main", "website-home-main"],
-      "title": "Sponsored: Curated Adventure Worlds",
-      "body": "Explore tested maps and modpacks tuned for smooth setup in Fishbattery.",
-      "cta": "Browse highlights",
-      "media": "Worlds",
-      "link": "https://fishbatteryapp.github.io/fishbattery-web/download.html"
+      "id": "Your ad here",
+      "title": "Sponsored: Your brand name here",
+      "body": "Want to reach an engaged Minecraft audience? Advertise in Fishbattery Launcher.",
+      "cta": "Get in touch",
+      "media": "Advertise",
+      "partner": "Fishbattery Partner",
+      "imageUrl": null,
+      "mediaBg": null,
+      "link": "https://fishbattery.app"
     }
   ]
 }
