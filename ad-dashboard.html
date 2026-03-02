@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="icon" type="image/x-icon" href="/assets/Logo transparent.png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fishbattery Ad Publisher Dashboard</title>
+    <meta name="description" content="Ad publisher dashboard for Fishbattery campaigns, with performance analytics and campaign tools." />
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Fishbattery" />
+    <meta property="og:title" content="Fishbattery Ad Publisher Dashboard" />
+    <meta property="og:description" content="Track impressions, clicks, CTR, and campaign pacing across Fishbattery placements." />
+    <meta property="og:url" content="https://fishbattery.app/ad-dashboard.html" />
+    <meta property="og:image" content="https://fishbattery.app/assets/launcher%20front%20page%20screenshot.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Fishbattery Ad Publisher Dashboard" />
+    <meta name="twitter:description" content="Monitor campaign performance and use built-in publisher tools." />
+    <meta name="twitter:image" content="https://fishbattery.app/assets/launcher%20front%20page%20screenshot.png" />
+    <link rel="canonical" href="https://fishbattery.app/ad-dashboard.html" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="ads-page">
+    <div class="bg"></div>
+    <main class="page narrow">
+      <header class="topbar card">
+        <div class="top-left">
+          <a class="brand" href="./index.html">Fishbattery</a>
+          <nav class="top-links">
+            <a href="./download.html">Download</a>
+            <a href="./advertise.html">Advertise</a>
+            <a href="./ad-dashboard.html" class="active">Publisher dashboard</a>
+          </nav>
+        </div>
+        <div id="authActions" class="actions"></div>
+      </header>
+
+      <header class="card ads-hero">
+        <p class="kicker">Publisher dashboard</p>
+        <h1>Campaign analytics and tools</h1>
+        <p class="lead">
+          View performance by placement, compare time windows, and manage campaign actions from one control surface.
+        </p>
+        <p id="dashboardAuthHint" class="hint">
+          Sign in to manage your own campaigns. Dashboard key can optionally unlock admin-all view.
+        </p>
+      </header>
+
+      <section class="card">
+        <p class="kicker">Campaign manager</p>
+        <h2>Create or update your campaigns</h2>
+        <div class="ads-form-grid">
+          <div class="field">
+            <span>Campaign ID (optional for create)</span>
+            <input id="campaignIdInput" type="text" placeholder="camp_mybrand_april" autocomplete="off" />
+          </div>
+          <div class="field">
+            <span>Campaign name</span>
+            <input id="campaignNameInput" type="text" placeholder="My Brand Spring Launch" autocomplete="off" />
+          </div>
+          <div class="field">
+            <span>Status</span>
+            <select id="campaignStatusInput">
+              <option value="review" selected>In review</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>Landing URL</span>
+            <input id="campaignLandingInput" type="url" placeholder="https://example.com" autocomplete="off" />
+          </div>
+          <div class="field">
+            <span>Media label</span>
+            <input id="campaignMediaInput" type="text" placeholder="Hosting" autocomplete="off" />
+          </div>
+          <div class="field">
+            <span>Title</span>
+            <input id="campaignTitleInput" type="text" placeholder="Sponsored: Fast server hosting" autocomplete="off" />
+          </div>
+          <div class="field">
+            <span>Body</span>
+            <textarea id="campaignBodyInput" rows="3" placeholder="Low latency EU nodes, instant setup, and 24/7 support."></textarea>
+          </div>
+          <div class="field">
+            <span>CTA</span>
+            <input id="campaignCtaInput" type="text" placeholder="Start now" autocomplete="off" />
+          </div>
+        </div>
+        <div class="ads-placement-picker">
+          <label><input type="checkbox" class="campaign-placement" value="website-home-main" /> Website home (EUR 20)</label>
+          <label><input type="checkbox" class="campaign-placement" value="website-download-main" /> Website download (EUR 45)</label>
+          <label><input type="checkbox" class="campaign-placement" value="launcher-sidebar" /> Launcher sidebar (EUR 100)</label>
+        </div>
+        <div class="ads-tools-grid">
+          <button class="btn btn-primary" type="button" id="btnCreateCampaign">Create campaign</button>
+          <button class="btn" type="button" id="btnUpdateCampaign">Update campaign</button>
+          <button class="btn" type="button" id="btnReloadMine">Reload my campaigns</button>
+          <button class="btn" type="button" id="btnClearForm">Clear form</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <p class="kicker">My campaigns</p>
+        <h2>Owned by your account</h2>
+        <div class="dashboard-table-wrap">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Campaign ID</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Placements</th>
+                <th>Last update</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="ownedCampaignRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card dashboard-controls">
+        <div class="field">
+          <span>Publisher key (optional)</span>
+          <input id="dashboardKey" type="password" placeholder="Enter dashboard key if required" autocomplete="off" />
+        </div>
+        <div class="field">
+          <span>Time range</span>
+          <select id="rangeSelect">
+            <option value="7d">Last 7 days</option>
+            <option value="30d" selected>Last 30 days</option>
+            <option value="90d">Last 90 days</option>
+          </select>
+        </div>
+        <div class="field">
+          <span>Placement</span>
+          <select id="placementSelect">
+            <option value="all" selected>All placements</option>
+            <option value="website-home-main">Website home</option>
+            <option value="website-download-main">Website download</option>
+            <option value="launcher-sidebar">Launcher sidebar</option>
+          </select>
+        </div>
+        <div class="field">
+          <span>Status</span>
+          <select id="statusSelect">
+            <option value="all" selected>All statuses</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="review">In review</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="ads-kpi-grid">
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Impressions</p>
+          <p id="kpiImpressions" class="ads-kpi-value">0</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Clicks</p>
+          <p id="kpiClicks" class="ads-kpi-value">0</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">CTR</p>
+          <p id="kpiCtr" class="ads-kpi-value">0%</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Booked placement fees</p>
+          <p id="kpiSpend" class="ads-kpi-value">EUR 0</p>
+        </article>
+      </section>
+
+      <section class="card">
+        <p class="kicker">Performance by placement</p>
+        <h2>Distribution overview</h2>
+        <div id="placementBars" class="ads-bars" aria-label="Placement performance chart"></div>
+      </section>
+
+      <section class="card">
+        <p class="kicker">Campaigns</p>
+        <h2>Campaign status and pacing</h2>
+        <div class="dashboard-table-wrap">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Select</th>
+                <th>Campaign</th>
+                <th>Placement</th>
+                <th>Status</th>
+                <th>Impressions</th>
+                <th>Clicks</th>
+                <th>CTR</th>
+                <th>Placement fee</th>
+              </tr>
+            </thead>
+            <tbody id="campaignRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <p class="kicker">Publisher tools</p>
+        <h2>Quick actions</h2>
+        <div class="ads-tools-grid">
+          <button class="btn" type="button" id="btnExport">Export CSV report</button>
+          <button class="btn" type="button" id="btnPause">Pause selected campaigns</button>
+          <button class="btn" type="button" id="btnRefresh">Refresh live data</button>
+          <a class="btn btn-primary" href="mailto:ads@fishbattery.app?subject=Fishbattery%20Creative%20Update">Request creative update</a>
+        </div>
+        <p id="dashboardNotice" class="hint">Choose filters above to focus performance views.</p>
+      </section>
+
+      <footer class="card legal-footer">
+        <div class="legal-main">
+          <strong>Fishbattery Launcher</strong>
+          <div class="legal-links">
+            <a href="./index.html">Home</a>
+            <a href="./advertise.html">Advertise</a>
+            <a href="./terms.html">Terms</a>
+            <a href="./privacy.html">Privacy</a>
+          </div>
+        </div>
+        <div class="legal-copy">
+          <span>&copy; Fishbattery</span>
+          <span>Analytics shown here are publisher-facing performance summaries.</span>
+        </div>
+      </footer>
+    </main>
+    <script src="./consent.js"></script>
+    <script src="./site-nav.js"></script>
+    <script src="./ad-dashboard.js"></script>
+  </body>
+</html>

@@ -13,12 +13,20 @@
   const slots = Array.from(document.querySelectorAll(".sponsored-slot[data-ad-placement]"));
   if (!slots.length) return;
 
-  // Fallback ad feeds (local first, hosted second).
+  // Static fallback feeds (used when API feed is unavailable).
   const FEED_URLS = ["./assets/ads.json", "https://fishbatteryapp.github.io/fishbattery-web/assets/ads.json"];
 
   // AdSense bootstrap source.
   const ADSENSE_SRC =
     "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8826985281954941";
+  // Shared auth API base used for analytics ingestion.
+  const PUBLIC_API_BASE = "https://fishbattery-auth-api-production.up.railway.app";
+  const isLocalDev =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
+  const API_BASES_DEFAULT = isLocalDev
+    ? [PUBLIC_API_BASE, "http://localhost:3000"]
+    : [PUBLIC_API_BASE];
 
   // Keep one shared in-flight promise to avoid duplicate script insertions.
   let adsenseLoadPromise = null;
@@ -26,6 +34,82 @@
   // Fallback scheduling guards
   let fallbackTimer = null;
   let fallbackRendered = false;
+  let trackedImpressionKeys = new Set();
+
+  function getApiBases() {
+    const resolved = (localStorage.getItem("fishbattery.apiBaseResolved") || "").trim();
+    const out = [];
+    if (resolved && API_BASES_DEFAULT.includes(resolved)) out.push(resolved);
+    for (const base of API_BASES_DEFAULT) {
+      if (!out.includes(base)) out.push(base);
+    }
+    return out;
+  }
+
+  function getSessionId() {
+    const key = "fishbattery.ads.sessionId";
+    let value = String(localStorage.getItem(key) || "").trim().toLowerCase();
+    if (!/^[a-z0-9_-]{8,128}$/.test(value)) {
+      value = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
+      localStorage.setItem(key, value);
+    }
+    return value;
+  }
+
+  async function postAdEvent(eventType, campaignId, placement) {
+    const payload = {
+      eventType,
+      campaignId: String(campaignId || "").trim().toLowerCase(),
+      placement: String(placement || "").trim().toLowerCase(),
+      pagePath: window.location.pathname || "/",
+      sessionId: getSessionId(),
+      referrerHost: (() => {
+        try {
+          return document.referrer ? new URL(document.referrer).hostname : "";
+        } catch {
+          return "";
+        }
+      })()
+    };
+    if (!payload.campaignId || !payload.placement) return;
+
+    for (const base of getApiBases()) {
+      try {
+        const response = await fetch(`${base}/v1/ads/events`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) continue;
+        localStorage.setItem("fishbattery.apiBaseResolved", base);
+        return;
+      } catch {
+        // try next base
+      }
+    }
+  }
+
+  function campaignIdFromPlacement(placement) {
+    return `network-${String(placement || "").trim().toLowerCase()}`;
+  }
+
+  function observeAndTrackSlot(slot, campaignId, placement) {
+    const key = `${campaignId}|${placement}|${window.location.pathname || "/"}`;
+    if (trackedImpressionKeys.has(key)) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries?.length) return;
+        const top = entries[0];
+        if (!top.isIntersecting || top.intersectionRatio < 0.45) return;
+        trackedImpressionKeys.add(key);
+        observer.disconnect();
+        void postAdEvent("impression", campaignId, placement);
+      },
+      { threshold: [0.45] }
+    );
+    observer.observe(slot);
+  }
 
   function isTestMode() {
     try {
@@ -40,6 +124,8 @@
 
   // Validate and normalize raw feed entry into a predictable shape.
   function normalizeAd(ad) {
+    const idRaw = String(ad?.id || "").trim().toLowerCase();
+    const id = /^[a-z0-9][a-z0-9_-]{1,63}$/.test(idRaw) ? idRaw : "your-ad-here";
     const title = String(ad?.title || "").trim();
     const body = String(ad?.body || "").trim();
     const cta = String(ad?.cta || "Learn more").trim();
@@ -49,7 +135,7 @@
     const active = ad?.active !== false;
 
     if (!active || !title || !body || !/^https?:\/\//i.test(link)) return null;
-    return { title, body, cta, link, media, placements };
+    return { id, title, body, cta, link, media, placements };
   }
 
   // Pick one ad for a given placement, rotating deterministically via localStorage cursor.
@@ -105,6 +191,13 @@
     if (ctaEl) {
       ctaEl.textContent = ad.cta || "Learn more";
       ctaEl.href = ad.link;
+      if (!ctaEl.dataset.adTracked) {
+        ctaEl.dataset.adTracked = "1";
+        ctaEl.addEventListener("click", () => {
+          const placement = String(slot.getAttribute("data-ad-placement") || "").trim().toLowerCase();
+          void postAdEvent("click", ad.id || campaignIdFromPlacement(placement), placement);
+        });
+      }
     }
     if (kickerEl) kickerEl.textContent = ad.media ? `Sponsored - ${ad.media}` : "Sponsored";
   }
@@ -127,6 +220,7 @@
       }
 
       applyAdToSlot(slot, ad);
+      observeAndTrackSlot(slot, ad.id || campaignIdFromPlacement(placement), placement);
     }
   }
 
@@ -187,8 +281,47 @@
     return pushed;
   }
 
-  // Fetch and normalize the first valid fallback feed.
+  async function loadApiFeedByPlacement(placement) {
+    if (!placement) return [];
+    for (const base of getApiBases()) {
+      try {
+        const response = await fetch(
+          `${base}/v1/ads/feed?placement=${encodeURIComponent(placement)}&limit=5`,
+          { cache: "no-store" }
+        );
+        if (!response.ok) continue;
+        const json = await response.json();
+        const adsRaw = Array.isArray(json?.ads) ? json.ads : [];
+        const ads = adsRaw.map(normalizeAd).filter(Boolean);
+        if (ads.length) {
+          localStorage.setItem("fishbattery.apiBaseResolved", base);
+          return ads;
+        }
+      } catch {
+        // try next base
+      }
+    }
+    return [];
+  }
+
+  // Fetch and normalize fallback feed.
   async function loadFeed() {
+    // Prefer live API feed so campaign updates appear immediately.
+    const placementSet = Array.from(
+      new Set(
+        slots
+          .map((slot) => String(slot.getAttribute("data-ad-placement") || "").trim().toLowerCase())
+          .filter(Boolean)
+      )
+    );
+    const fromApi = [];
+    for (const placement of placementSet) {
+      const ads = await loadApiFeedByPlacement(placement);
+      if (ads.length) fromApi.push(...ads);
+    }
+    if (fromApi.length) return fromApi;
+
+    // Fall back to static JSON if API feed is unavailable.
     for (const url of FEED_URLS) {
       try {
         const response = await fetch(url, { cache: "no-store" });
@@ -239,6 +372,13 @@
         renderFallback(ads);
         fallbackRendered = true;
         return;
+      }
+
+      // AdSense slots are still first-party placements for impression analytics.
+      for (const slot of slots) {
+        const placement = String(slot.getAttribute("data-ad-placement") || "").trim().toLowerCase();
+        if (!placement) continue;
+        observeAndTrackSlot(slot, campaignIdFromPlacement(placement), placement);
       }
 
       // If AdSense pushes but doesn't fill, fallback after a short delay.
