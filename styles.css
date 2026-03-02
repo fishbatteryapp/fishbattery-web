@@ -901,6 +901,11 @@ input[type="file"]::-webkit-file-upload-button:hover {
   border-color: rgba(111, 211, 255, 0.55);
 }
 
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .btn-disabled {
   opacity: 0.55;
   pointer-events: none;
@@ -2144,6 +2149,7 @@ input[type="file"]::-webkit-file-upload-button:hover {
   padding: 0.62rem 0.72rem;
   border-bottom: 1px solid rgba(89, 168, 219, 0.18);
   text-align: left;
+  vertical-align: top;
 }
 
 .dashboard-table th {
@@ -2157,6 +2163,32 @@ input[type="file"]::-webkit-file-upload-button:hover {
 .dashboard-table td {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.dashboard-table td:nth-child(1),
+.dashboard-table td:nth-child(4),
+.dashboard-table td:nth-child(5),
+.dashboard-table td:nth-child(6),
+.dashboard-table td:nth-child(7),
+.dashboard-table td:nth-child(8),
+.dashboard-table th:nth-child(1),
+.dashboard-table th:nth-child(4),
+.dashboard-table th:nth-child(5),
+.dashboard-table th:nth-child(6),
+.dashboard-table th:nth-child(7),
+.dashboard-table th:nth-child(8) {
+  white-space: nowrap;
+}
+
+.dashboard-table td:nth-child(5),
+.dashboard-table td:nth-child(6),
+.dashboard-table td:nth-child(7),
+.dashboard-table td:nth-child(8),
+.dashboard-table th:nth-child(5),
+.dashboard-table th:nth-child(6),
+.dashboard-table th:nth-child(7),
+.dashboard-table th:nth-child(8) {
+  text-align: right;
 }
 
 .dashboard-table tr:last-child td {

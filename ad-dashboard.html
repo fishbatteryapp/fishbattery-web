@@ -59,8 +59,8 @@
             <input id="campaignNameInput" type="text" placeholder="My Brand Spring Launch" autocomplete="off" />
           </div>
           <div class="field">
-            <span>Status</span>
-            <select id="campaignStatusInput">
+            <span>Status (admin only)</span>
+            <select id="campaignStatusInput" disabled>
               <option value="review" selected>In review</option>
               <option value="active">Active</option>
               <option value="paused">Paused</option>
@@ -206,6 +206,7 @@
         <div class="ads-tools-grid">
           <button class="btn" type="button" id="btnExport">Export CSV report</button>
           <button class="btn" type="button" id="btnPause">Pause selected campaigns</button>
+          <button class="btn" type="button" id="btnActivate">Set selected active</button>
           <button class="btn" type="button" id="btnRefresh">Refresh live data</button>
           <a class="btn btn-primary" href="mailto:ads@fishbattery.app?subject=Fishbattery%20Creative%20Update">Request creative update</a>
         </div>

@@ -16,6 +16,7 @@
 
   const btnExport = document.getElementById("btnExport");
   const btnPause = document.getElementById("btnPause");
+  const btnActivate = document.getElementById("btnActivate");
   const btnRefresh = document.getElementById("btnRefresh");
 
   const btnCreateCampaign = document.getElementById("btnCreateCampaign");
@@ -40,6 +41,13 @@
 
   let currentCampaignMetrics = [];
   let currentOwnedCampaigns = [];
+  let currentCampaignRows = [];
+
+  const placementLabelMap = {
+    "website-home-main": "Website home",
+    "website-download-main": "Website download",
+    "launcher-sidebar": "Launcher sidebar"
+  };
 
   function escapeHtml(value) {
     return String(value || "")
@@ -65,6 +73,11 @@
     } catch {
       return "n/a";
     }
+  }
+
+  function placementLabel(value) {
+    const key = String(value || "").trim().toLowerCase();
+    return placementLabelMap[key] || key || "Unknown";
   }
 
   function getApiBases() {
@@ -123,6 +136,17 @@
     authHint.textContent = "Sign in to manage your own campaigns. Dashboard key can optionally unlock admin-all view.";
   }
 
+  function hasAdminKey() {
+    return !!getDashboardKey();
+  }
+
+  function syncAdminOnlyControls() {
+    const admin = hasAdminKey();
+    if (campaignStatusInput) campaignStatusInput.disabled = !admin;
+    if (btnPause) btnPause.disabled = !admin;
+    if (btnActivate) btnActivate.disabled = !admin;
+  }
+
   async function apiFetch(path, options = {}) {
     const headers = { ...(options.headers || {}) };
     const token = getAuthToken();
@@ -158,15 +182,16 @@
 
   function renderPlacementBars(rows) {
     if (!placementBars) return;
-    const list = Array.isArray(rows) ? rows : [];
+    const listRaw = Array.isArray(rows) ? rows : [];
+    const list = listRaw.filter((row) => Number(row?.impressions || 0) > 0 || Number(row?.clicks || 0) > 0);
     if (!list.length) {
-      placementBars.innerHTML = `<p class="hint">No placement data for current filters.</p>`;
+      placementBars.innerHTML = `<p class="hint">No active placement traffic in this range yet.</p>`;
       return;
     }
     const maxImpressions = Math.max(...list.map((x) => Number(x?.impressions || 0)), 1);
     placementBars.innerHTML = list
       .map((row) => {
-        const placement = escapeHtml(row?.placement || "unknown");
+        const placement = escapeHtml(placementLabel(row?.placement));
         const impressions = Number(row?.impressions || 0);
         const clicks = Number(row?.clicks || 0);
         const ctr = Number(row?.ctr || 0);
@@ -188,15 +213,53 @@
 
   function renderMetricsTable(rows) {
     currentCampaignMetrics = Array.isArray(rows) ? rows : [];
-    if (!currentCampaignMetrics.length) {
+    const grouped = new Map();
+
+    for (const row of currentCampaignMetrics) {
+      const campaignId = String(row?.campaignId || "").trim();
+      if (!campaignId) continue;
+
+      const existing = grouped.get(campaignId) || {
+        campaignId,
+        campaignName: String(row?.campaignName || ""),
+        status: String(row?.status || "review"),
+        impressions: 0,
+        clicks: 0,
+        placementFeeEur: 0,
+        placements: []
+      };
+
+      const placement = String(row?.placement || "").trim();
+      if (placement && !existing.placements.includes(placement)) existing.placements.push(placement);
+      existing.impressions += Number(row?.impressions || 0);
+      existing.clicks += Number(row?.clicks || 0);
+      existing.placementFeeEur += Number(row?.placementFeeEur || 0);
+      grouped.set(campaignId, existing);
+    }
+
+    currentCampaignRows = Array.from(grouped.values())
+      .map((row) => ({
+        ...row,
+        ctr: row.impressions > 0 ? (row.clicks / row.impressions) * 100 : 0
+      }))
+      .sort((a, b) => {
+        if (b.impressions !== a.impressions) return b.impressions - a.impressions;
+        return a.campaignName.localeCompare(b.campaignName);
+      });
+
+    if (!currentCampaignRows.length) {
       campaignRows.innerHTML = `<tr><td colspan="8">No campaign metrics match the selected filters.</td></tr>`;
       return;
     }
-    campaignRows.innerHTML = currentCampaignMetrics
+    campaignRows.innerHTML = currentCampaignRows
       .map((row) => {
         const campaignId = escapeHtml(row?.campaignId || "");
         const campaignName = escapeHtml(row?.campaignName || "");
-        const placement = escapeHtml(row?.placement || "");
+        const placement = escapeHtml(
+          (Array.isArray(row?.placements) ? row.placements : [])
+            .map((p) => placementLabel(p))
+            .join(", ")
+        );
         const status = escapeHtml(row?.status || "review");
         const impressions = Number(row?.impressions || 0);
         const clicks = Number(row?.clicks || 0);
@@ -301,10 +364,11 @@
   }
 
   function collectFormPayload() {
+    const admin = hasAdminKey();
     return {
       campaignId: String(campaignIdInput?.value || "").trim(),
       name: String(campaignNameInput?.value || "").trim(),
-      status: String(campaignStatusInput?.value || "review").trim(),
+      status: admin ? String(campaignStatusInput?.value || "review").trim() : "review",
       landingUrl: String(campaignLandingInput?.value || "").trim(),
       media: String(campaignMediaInput?.value || "").trim(),
       title: String(campaignTitleInput?.value || "").trim(),
@@ -345,7 +409,7 @@
       lines.push([
         String(row?.campaignId || ""),
         String(row?.campaignName || ""),
-        String(row?.placement || ""),
+        String((Array.isArray(row?.placements) ? row.placements : []).join("|")),
         String(row?.status || ""),
         String(Number(row?.impressions || 0)),
         String(Number(row?.clicks || 0)),
@@ -371,6 +435,10 @@
   }
 
   async function setSelectedCampaignStatus(status) {
+    if (!hasAdminKey()) {
+      setNotice("Admin dashboard key is required to change campaign status.");
+      return;
+    }
     const ids = getSelectedCampaignIds();
     if (!ids.length) {
       setNotice("Select one or more campaign rows first.");
@@ -439,9 +507,10 @@
 
   if (btnRefresh) btnRefresh.addEventListener("click", () => void refreshAll());
   if (btnPause) btnPause.addEventListener("click", () => void setSelectedCampaignStatus("paused"));
+  if (btnActivate) btnActivate.addEventListener("click", () => void setSelectedCampaignStatus("active"));
   if (btnExport) {
     btnExport.addEventListener("click", () => {
-      const csv = toCsv(currentCampaignMetrics);
+      const csv = toCsv(currentCampaignRows);
       downloadCsv(csv);
       setNotice("CSV export downloaded.");
     });
@@ -463,11 +532,13 @@
     dashboardKeyInput.addEventListener("change", () => {
       saveDashboardKey();
       updateAuthHint();
+      syncAdminOnlyControls();
       void refreshSummary();
     });
   }
 
   loadDashboardKey();
   updateAuthHint();
+  syncAdminOnlyControls();
   void refreshAll();
 })();

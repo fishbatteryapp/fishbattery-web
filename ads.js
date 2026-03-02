@@ -334,7 +334,25 @@
         // try next source
       }
     }
-    return [];
+    // Last-resort house ad so sponsored slot is never blank.
+    const placements = Array.from(
+      new Set(
+        slots
+          .map((slot) => String(slot.getAttribute("data-ad-placement") || "").trim().toLowerCase())
+          .filter(Boolean)
+      )
+    );
+    return [
+      {
+        id: "your-ad-here",
+        title: "Sponsored: Your brand name here",
+        body: "Want to reach an engaged Minecraft audience? Advertise with transparent fixed placement pricing.",
+        cta: "Apply now",
+        link: "https://fishbattery.app/advertise.html",
+        media: "Advertise",
+        placements
+      }
+    ];
   }
 
   // Single render entry for consent state transitions.
