@@ -143,8 +143,14 @@
   function syncAdminOnlyControls() {
     const admin = hasAdminKey();
     if (campaignStatusInput) campaignStatusInput.disabled = !admin;
-    if (btnPause) btnPause.disabled = !admin;
-    if (btnActivate) btnActivate.disabled = !admin;
+    if (btnPause) {
+      btnPause.disabled = !admin;
+      btnPause.title = admin ? "Pause selected campaigns" : "Set admin dashboard key to enable status changes";
+    }
+    if (btnActivate) {
+      btnActivate.disabled = !admin;
+      btnActivate.title = admin ? "Set selected campaigns active" : "Set admin dashboard key to enable status changes";
+    }
   }
 
   async function apiFetch(path, options = {}) {
@@ -444,13 +450,23 @@
       setNotice("Select one or more campaign rows first.");
       return;
     }
-    await apiFetch("/v1/ads/campaigns/status", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ campaignIds: ids, status })
-    });
-    setNotice(`Updated ${ids.length} campaign(s) to ${status}.`);
-    await refreshAll();
+    try {
+      const response = await apiFetch("/v1/ads/campaigns/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaignIds: ids, status })
+      });
+      const data = await response.json().catch(() => ({}));
+      const updatedCount = Array.isArray(data?.updated) ? data.updated.length : 0;
+      setNotice(
+        updatedCount > 0
+          ? `Updated ${updatedCount} campaign(s) to ${status}.`
+          : `No campaigns were updated. Check admin key and deployment version.`
+      );
+      await refreshAll();
+    } catch (err) {
+      setNotice(`Status update failed: ${String(err?.message || err)}`);
+    }
   }
 
   async function createCampaignFromForm() {

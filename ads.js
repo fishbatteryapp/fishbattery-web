@@ -35,6 +35,7 @@
   let fallbackTimer = null;
   let fallbackRendered = false;
   let trackedImpressionKeys = new Set();
+  const FEED_TIMEOUT_MS = 2200;
 
   function getApiBases() {
     const resolved = (localStorage.getItem("fishbattery.apiBaseResolved") || "").trim();
@@ -86,6 +87,20 @@
       } catch {
         // try next base
       }
+    }
+  }
+
+  async function fetchJsonWithTimeout(url, timeoutMs = FEED_TIMEOUT_MS, options = {}) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
+      return response;
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -285,8 +300,9 @@
     if (!placement) return [];
     for (const base of getApiBases()) {
       try {
-        const response = await fetch(
+        const response = await fetchJsonWithTimeout(
           `${base}/v1/ads/feed?placement=${encodeURIComponent(placement)}&limit=5`,
+          FEED_TIMEOUT_MS,
           { cache: "no-store" }
         );
         if (!response.ok) continue;
@@ -314,17 +330,14 @@
           .filter(Boolean)
       )
     );
-    const fromApi = [];
-    for (const placement of placementSet) {
-      const ads = await loadApiFeedByPlacement(placement);
-      if (ads.length) fromApi.push(...ads);
-    }
+    const apiResults = await Promise.all(placementSet.map((placement) => loadApiFeedByPlacement(placement)));
+    const fromApi = apiResults.flat().filter(Boolean);
     if (fromApi.length) return fromApi;
 
     // Fall back to static JSON if API feed is unavailable.
     for (const url of FEED_URLS) {
       try {
-        const response = await fetch(url, { cache: "no-store" });
+        const response = await fetchJsonWithTimeout(url, FEED_TIMEOUT_MS, { cache: "no-store" });
         if (!response.ok) continue;
         const json = await response.json();
         const adsRaw = Array.isArray(json?.ads) ? json.ads : [];
