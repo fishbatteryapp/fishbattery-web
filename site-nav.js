@@ -7,6 +7,24 @@
   // - Render logged-out CTA or logged-in account pill + logout.
   // - Toggle sponsored sections by subscription status and consent state.
 
+  function applyPerformanceMode() {
+    const root = document.documentElement;
+    if (!root) return;
+    try {
+      const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const saveData = !!(navigator.connection && navigator.connection.saveData);
+      const lowMemory = Number(navigator.deviceMemory || 0) > 0 && Number(navigator.deviceMemory || 0) <= 4;
+      const lowCores = Number(navigator.hardwareConcurrency || 0) > 0 && Number(navigator.hardwareConcurrency || 0) <= 4;
+      const lowPerf = reducedMotion || saveData || lowMemory || lowCores;
+      root.classList.toggle("low-perf", lowPerf);
+      root.classList.toggle("reduced-motion", reducedMotion);
+    } catch {
+      // Keep default visuals if capability detection fails.
+    }
+  }
+
+  applyPerformanceMode();
+
   function ensurePhotoCredit() {
     const legalCopy = document.querySelector(".legal-footer .legal-copy");
     if (!legalCopy || legalCopy.querySelector(".photo-credit")) return;

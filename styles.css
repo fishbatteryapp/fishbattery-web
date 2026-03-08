@@ -39,7 +39,7 @@ body {
     radial-gradient(900px 500px at 100% -10%, rgba(49, 144, 212, 0.18), transparent 70%),
     radial-gradient(800px 500px at -10% 0%, rgba(35, 110, 180, 0.12), transparent 70%),
     linear-gradient(180deg, rgba(6, 20, 38, 0.44), rgba(4, 11, 24, 0.56)),
-    url("./assets/ali-abdul-rahman-Xva-TYqwHhA-unsplash.jpg") center center / cover no-repeat fixed;
+    url("./assets/ali-abdul-rahman-Xva-TYqwHhA-unsplash.jpg") center center / cover no-repeat;
 }
 
 /* Page/container primitives */
@@ -64,8 +64,38 @@ body {
   background: var(--card);
   border-radius: 16px;
   padding: 1rem 1.1rem;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(6px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+html.low-perf .bg {
+  position: absolute;
+}
+
+html.low-perf .card {
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  background: rgba(9, 25, 42, 0.9);
+}
+
+html.low-perf *,
+html.reduced-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg {
+    position: absolute;
+  }
+
+  .card {
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    background: rgba(9, 25, 42, 0.9);
+  }
 }
 
 /* Top navigation and account pill */
