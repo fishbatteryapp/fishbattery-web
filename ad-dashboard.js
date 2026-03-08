@@ -2,36 +2,22 @@
   const rangeSelect = document.getElementById("rangeSelect");
   const placementSelect = document.getElementById("placementSelect");
   const statusSelect = document.getElementById("statusSelect");
-  const dashboardKeyInput = document.getElementById("dashboardKey");
   const authHint = document.getElementById("dashboardAuthHint");
 
   const kpiImpressions = document.getElementById("kpiImpressions");
   const kpiClicks = document.getElementById("kpiClicks");
   const kpiCtr = document.getElementById("kpiCtr");
-  const kpiSpend = document.getElementById("kpiSpend");
+  const kpiRevenue = document.getElementById("kpiRevenue");
+  const kpiEcpm = document.getElementById("kpiEcpm");
+  const kpiConversions = document.getElementById("kpiConversions");
+  const kpiConversionRate = document.getElementById("kpiConversionRate");
+  const kpiAvgCpc = document.getElementById("kpiAvgCpc");
   const placementBars = document.getElementById("placementBars");
   const campaignRows = document.getElementById("campaignRows");
-  const ownedCampaignRows = document.getElementById("ownedCampaignRows");
   const notice = document.getElementById("dashboardNotice");
 
   const btnExport = document.getElementById("btnExport");
-  const btnPause = document.getElementById("btnPause");
-  const btnActivate = document.getElementById("btnActivate");
   const btnRefresh = document.getElementById("btnRefresh");
-
-  const btnCreateCampaign = document.getElementById("btnCreateCampaign");
-  const btnUpdateCampaign = document.getElementById("btnUpdateCampaign");
-  const btnReloadMine = document.getElementById("btnReloadMine");
-  const btnClearForm = document.getElementById("btnClearForm");
-
-  const campaignIdInput = document.getElementById("campaignIdInput");
-  const campaignNameInput = document.getElementById("campaignNameInput");
-  const campaignStatusInput = document.getElementById("campaignStatusInput");
-  const campaignLandingInput = document.getElementById("campaignLandingInput");
-  const campaignMediaInput = document.getElementById("campaignMediaInput");
-  const campaignTitleInput = document.getElementById("campaignTitleInput");
-  const campaignBodyInput = document.getElementById("campaignBodyInput");
-  const campaignCtaInput = document.getElementById("campaignCtaInput");
 
   if (!rangeSelect || !placementSelect || !statusSelect || !campaignRows) return;
 
@@ -40,8 +26,10 @@
   const API_BASES_DEFAULT = isLocalDev ? [PUBLIC_API_BASE, "http://localhost:3000"] : [PUBLIC_API_BASE];
 
   let currentCampaignMetrics = [];
-  let currentOwnedCampaigns = [];
   let currentCampaignRows = [];
+  const CPM_EUR = 1.5;
+  const CPC_EUR = 0.3;
+  const CPA_EUR = 2;
 
   const placementLabelMap = {
     "website-home-main": "Website home",
@@ -62,17 +50,52 @@
   }
 
   function formatMoneyEur(value) {
-    return `EUR ${Number(value || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+    return `EUR ${Number(value || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
   }
 
-  function formatDateMs(value) {
-    const ms = Number(value || 0);
-    if (!ms) return "n/a";
-    try {
-      return new Date(ms).toLocaleString();
-    } catch {
-      return "n/a";
-    }
+  function asFiniteNumber(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  function campaignPricingModel(row) {
+    const raw = String(
+      row?.pricingModel || row?.pricing_model || row?.billingModel || row?.billing_model || row?.model || "mixed"
+    )
+      .trim()
+      .toLowerCase();
+    if (raw === "cpm" || raw === "cpc" || raw === "cpa" || raw === "mixed") return raw;
+    if (raw.includes("cpm")) return "cpm";
+    if (raw.includes("cpc")) return "cpc";
+    if (raw.includes("cpa")) return "cpa";
+    return "mixed";
+  }
+
+  function campaignRates(row) {
+    return {
+      cpmEur: asFiniteNumber(row?.cpmEur ?? row?.cpm ?? row?.rateCpmEur, CPM_EUR),
+      cpcEur: asFiniteNumber(row?.cpcEur ?? row?.cpc ?? row?.rateCpcEur, CPC_EUR),
+      cpaEur: asFiniteNumber(row?.cpaEur ?? row?.cpa ?? row?.rateCpaEur, CPA_EUR)
+    };
+  }
+
+  function conversionCount(row) {
+    return asFiniteNumber(row?.conversions ?? row?.actions ?? row?.installs ?? row?.signups, 0);
+  }
+
+  function computeRevenueForRow(row) {
+    const impressions = asFiniteNumber(row?.impressions, 0);
+    const clicks = asFiniteNumber(row?.clicks, 0);
+    const conversions = conversionCount(row);
+    const model = campaignPricingModel(row);
+    const rates = campaignRates(row);
+    if (model === "cpm") return (impressions / 1000) * rates.cpmEur;
+    if (model === "cpc") return clicks * rates.cpcEur;
+    if (model === "cpa") return conversions * rates.cpaEur;
+    return (impressions / 1000) * rates.cpmEur + clicks * rates.cpcEur + conversions * rates.cpaEur;
   }
 
   function placementLabel(value) {
@@ -90,27 +113,8 @@
     return out;
   }
 
-  function getDashboardKey() {
-    return String(dashboardKeyInput?.value || "").trim();
-  }
-
   function getAuthToken() {
     return String(localStorage.getItem("fishbattery.token") || "").trim();
-  }
-
-  function saveDashboardKey() {
-    if (!dashboardKeyInput) return;
-    const key = getDashboardKey();
-    if (key) {
-      localStorage.setItem("fishbattery.ads.dashboardKey", key);
-    } else {
-      localStorage.removeItem("fishbattery.ads.dashboardKey");
-    }
-  }
-
-  function loadDashboardKey() {
-    if (!dashboardKeyInput) return;
-    dashboardKeyInput.value = String(localStorage.getItem("fishbattery.ads.dashboardKey") || "");
   }
 
   function setNotice(message) {
@@ -120,45 +124,17 @@
   function updateAuthHint() {
     if (!authHint) return;
     const hasToken = !!getAuthToken();
-    const hasKey = !!getDashboardKey();
-    if (hasToken && hasKey) {
-      authHint.textContent = "Signed in and admin key set. You can manage your campaigns and view all-scope data.";
-      return;
-    }
     if (hasToken) {
-      authHint.textContent = "Signed in. Dashboard is scoped to campaigns owned by your account.";
+      authHint.textContent = "Signed in. Dashboard is scoped to your own campaign stats.";
       return;
     }
-    if (hasKey) {
-      authHint.textContent = "Admin key set without account token. Analytics can load, but campaign ownership actions need login.";
-      return;
-    }
-    authHint.textContent = "Sign in to manage your own campaigns. Dashboard key can optionally unlock admin-all view.";
-  }
-
-  function hasAdminKey() {
-    return !!getDashboardKey();
-  }
-
-  function syncAdminOnlyControls() {
-    const admin = hasAdminKey();
-    if (campaignStatusInput) campaignStatusInput.disabled = !admin;
-    if (btnPause) {
-      btnPause.disabled = !admin;
-      btnPause.title = admin ? "Pause selected campaigns" : "Set admin dashboard key to enable status changes";
-    }
-    if (btnActivate) {
-      btnActivate.disabled = !admin;
-      btnActivate.title = admin ? "Set selected campaigns active" : "Set admin dashboard key to enable status changes";
-    }
+    authHint.textContent = "Sign in to view your campaign stats.";
   }
 
   async function apiFetch(path, options = {}) {
     const headers = { ...(options.headers || {}) };
     const token = getAuthToken();
-    const key = getDashboardKey();
     if (token) headers.Authorization = `Bearer ${token}`;
-    if (key) headers["x-ads-dashboard-key"] = key;
 
     for (const base of getApiBases()) {
       try {
@@ -180,10 +156,24 @@
   }
 
   function renderKpis(totals) {
-    if (kpiImpressions) kpiImpressions.textContent = formatNumber(totals?.impressions || 0);
-    if (kpiClicks) kpiClicks.textContent = formatNumber(totals?.clicks || 0);
-    if (kpiCtr) kpiCtr.textContent = `${Number(totals?.ctr || 0).toFixed(2)}%`;
-    if (kpiSpend) kpiSpend.textContent = formatMoneyEur(totals?.bookedPlacementFeesEur || 0);
+    const impressions = asFiniteNumber(totals?.impressions, 0);
+    const clicks = asFiniteNumber(totals?.clicks, 0);
+    const conversions = asFiniteNumber(totals?.conversions ?? totals?.actions, 0);
+    const ctr = asFiniteNumber(totals?.ctr, impressions > 0 ? (clicks / impressions) * 100 : 0);
+    const revenue =
+      asFiniteNumber(totals?.revenueEur ?? totals?.estimatedRevenueEur ?? totals?.spendEur ?? totals?.estimatedSpendEur, 0) ||
+      currentCampaignRows.reduce((sum, row) => sum + asFiniteNumber(row?.revenueEur, 0), 0);
+    const ecpm = impressions > 0 ? (revenue / impressions) * 1000 : 0;
+    const conversionRate = clicks > 0 ? (conversions / clicks) * 100 : 0;
+    const avgCpc = clicks > 0 ? revenue / clicks : 0;
+    if (kpiImpressions) kpiImpressions.textContent = formatNumber(impressions);
+    if (kpiClicks) kpiClicks.textContent = formatNumber(clicks);
+    if (kpiCtr) kpiCtr.textContent = `${ctr.toFixed(2)}%`;
+    if (kpiRevenue) kpiRevenue.textContent = formatMoneyEur(revenue);
+    if (kpiEcpm) kpiEcpm.textContent = formatMoneyEur(ecpm);
+    if (kpiConversions) kpiConversions.textContent = formatNumber(conversions);
+    if (kpiConversionRate) kpiConversionRate.textContent = `${conversionRate.toFixed(2)}%`;
+    if (kpiAvgCpc) kpiAvgCpc.textContent = formatMoneyEur(avgCpc);
   }
 
   function renderPlacementBars(rows) {
@@ -194,19 +184,23 @@
       placementBars.innerHTML = `<p class="hint">No active placement traffic in this range yet.</p>`;
       return;
     }
-    const maxImpressions = Math.max(...list.map((x) => Number(x?.impressions || 0)), 1);
+    const totalImpressions = Math.max(
+      1,
+      list.reduce((sum, row) => sum + asFiniteNumber(row?.impressions, 0), 0)
+    );
     placementBars.innerHTML = list
       .map((row) => {
         const placement = escapeHtml(placementLabel(row?.placement));
-        const impressions = Number(row?.impressions || 0);
-        const clicks = Number(row?.clicks || 0);
-        const ctr = Number(row?.ctr || 0);
-        const width = Math.max(8, Math.round((impressions / maxImpressions) * 100));
+        const impressions = asFiniteNumber(row?.impressions, 0);
+        const clicks = asFiniteNumber(row?.clicks, 0);
+        const ctr = asFiniteNumber(row?.ctr, impressions > 0 ? (clicks / impressions) * 100 : 0);
+        const share = (impressions / totalImpressions) * 100;
+        const width = Math.max(8, Math.round(share));
         return `
           <div class="ads-bar-row">
             <div class="ads-bar-meta">
               <strong>${placement}</strong>
-              <span>${formatNumber(impressions)} impressions | ${formatNumber(clicks)} clicks | ${ctr.toFixed(2)}% CTR</span>
+              <span>${share.toFixed(2)}% share (${formatNumber(impressions)} impressions) | ${formatNumber(clicks)} clicks | ${ctr.toFixed(2)}% CTR</span>
             </div>
             <div class="ads-bar-track">
               <span class="ads-bar-fill" style="width:${width}%"></span>
@@ -229,24 +223,43 @@
         campaignId,
         campaignName: String(row?.campaignName || ""),
         status: String(row?.status || "review"),
+        pricingModel: campaignPricingModel(row),
+        rates: campaignRates(row),
         impressions: 0,
         clicks: 0,
-        placementFeeEur: 0,
+        conversions: 0,
+        revenueEur: 0,
+        budgetEur: asFiniteNumber(row?.budgetEur ?? row?.budget, 0),
+        dailyLimitEur: asFiniteNumber(row?.dailyLimitEur ?? row?.dailyLimit, 0),
         placements: []
       };
 
       const placement = String(row?.placement || "").trim();
       if (placement && !existing.placements.includes(placement)) existing.placements.push(placement);
-      existing.impressions += Number(row?.impressions || 0);
-      existing.clicks += Number(row?.clicks || 0);
-      existing.placementFeeEur += Number(row?.placementFeeEur || 0);
+      const rowImpressions = asFiniteNumber(row?.impressions, 0);
+      const rowClicks = asFiniteNumber(row?.clicks, 0);
+      const rowConversions = conversionCount(row);
+      const rowRevenue =
+        asFiniteNumber(row?.revenueEur ?? row?.estimatedRevenueEur ?? row?.spendEur ?? row?.estimatedSpendEur, 0) ||
+        computeRevenueForRow(row);
+
+      existing.impressions += rowImpressions;
+      existing.clicks += rowClicks;
+      existing.conversions += rowConversions;
+      existing.revenueEur += rowRevenue;
+      if (!existing.budgetEur) existing.budgetEur = asFiniteNumber(row?.budgetEur ?? row?.budget, 0);
+      if (!existing.dailyLimitEur) existing.dailyLimitEur = asFiniteNumber(row?.dailyLimitEur ?? row?.dailyLimit, 0);
       grouped.set(campaignId, existing);
     }
 
     currentCampaignRows = Array.from(grouped.values())
       .map((row) => ({
         ...row,
-        ctr: row.impressions > 0 ? (row.clicks / row.impressions) * 100 : 0
+        ctr: row.impressions > 0 ? (row.clicks / row.impressions) * 100 : 0,
+        conversionRate: row.clicks > 0 ? (row.conversions / row.clicks) * 100 : 0,
+        avgCpc: row.clicks > 0 ? row.revenueEur / row.clicks : 0,
+        spentEur: row.revenueEur,
+        remainingBudgetEur: row.budgetEur > 0 ? Math.max(0, row.budgetEur - row.revenueEur) : 0
       }))
       .sort((a, b) => {
         if (b.impressions !== a.impressions) return b.impressions - a.impressions;
@@ -254,7 +267,7 @@
       });
 
     if (!currentCampaignRows.length) {
-      campaignRows.innerHTML = `<tr><td colspan="8">No campaign metrics match the selected filters.</td></tr>`;
+      campaignRows.innerHTML = `<tr><td colspan="15">No campaign metrics match the selected filters.</td></tr>`;
       return;
     }
     campaignRows.innerHTML = currentCampaignRows
@@ -267,121 +280,56 @@
             .join(", ")
         );
         const status = escapeHtml(row?.status || "review");
-        const impressions = Number(row?.impressions || 0);
-        const clicks = Number(row?.clicks || 0);
-        const ctr = Number(row?.ctr || 0);
-        const fee = Number(row?.placementFeeEur || 0);
+        const pricingModel = String(row?.pricingModel || "mixed").toUpperCase();
+        const impressions = asFiniteNumber(row?.impressions, 0);
+        const clicks = asFiniteNumber(row?.clicks, 0);
+        const ctr = asFiniteNumber(row?.ctr, 0);
+        const conversions = asFiniteNumber(row?.conversions, 0);
+        const conversionRate = asFiniteNumber(row?.conversionRate, 0);
+        const avgCpc = asFiniteNumber(row?.avgCpc, 0);
+        const revenue = asFiniteNumber(row?.revenueEur, 0);
+        const budget = asFiniteNumber(row?.budgetEur, 0);
+        const spent = asFiniteNumber(row?.spentEur, 0);
+        const remaining = asFiniteNumber(row?.remainingBudgetEur, 0);
+        const dailyLimit = asFiniteNumber(row?.dailyLimitEur, 0);
         return `
           <tr>
-            <td><input type="checkbox" class="campaign-select" value="${campaignId}" /></td>
             <td><strong>${campaignName}</strong></td>
             <td>${placement}</td>
             <td><span class="status-pill status-${status}">${status}</span></td>
+            <td>${pricingModel}</td>
             <td>${formatNumber(impressions)}</td>
             <td>${formatNumber(clicks)}</td>
             <td>${ctr.toFixed(2)}%</td>
-            <td>${formatMoneyEur(fee)}</td>
-          </tr>
-        `;
-      })
-      .join("");
-  }
-
-  function renderOwnedCampaigns(rows) {
-    if (!ownedCampaignRows) return;
-    currentOwnedCampaigns = Array.isArray(rows) ? rows : [];
-    if (!currentOwnedCampaigns.length) {
-      ownedCampaignRows.innerHTML = `<tr><td colspan="6">No owned campaigns yet.</td></tr>`;
-      return;
-    }
-
-    ownedCampaignRows.innerHTML = currentOwnedCampaigns
-      .map((campaign) => {
-        const placements = Array.isArray(campaign?.placements) ? campaign.placements : [];
-        const placementsLabel = placements
-          .map((p) => `${escapeHtml(p?.placement || "")} (${formatMoneyEur(p?.feeEur || 0)})`)
-          .join(", ");
-        return `
-          <tr>
-            <td>${escapeHtml(campaign?.campaignId || "")}</td>
-            <td>${escapeHtml(campaign?.name || "")}</td>
-            <td><span class="status-pill status-${escapeHtml(campaign?.status || "review")}">${escapeHtml(campaign?.status || "review")}</span></td>
-            <td>${placementsLabel || "n/a"}</td>
-            <td>${formatDateMs(campaign?.updatedAt)}</td>
-            <td><button class="btn btn-edit-owned" type="button" data-campaign-id="${escapeHtml(campaign?.campaignId || "")}">Load into form</button></td>
+            <td>${formatNumber(conversions)}</td>
+            <td>${conversionRate.toFixed(2)}%</td>
+            <td>${formatMoneyEur(avgCpc)}</td>
+            <td>${formatMoneyEur(revenue)}</td>
+            <td>${budget > 0 ? formatMoneyEur(budget) : "-"}</td>
+            <td>${formatMoneyEur(spent)}</td>
+            <td>${budget > 0 ? formatMoneyEur(remaining) : "-"}</td>
+            <td>${dailyLimit > 0 ? `${formatMoneyEur(dailyLimit)}/day` : "-"}</td>
           </tr>
         `;
       })
       .join("");
 
-    for (const button of document.querySelectorAll(".btn-edit-owned")) {
-      button.addEventListener("click", (event) => {
-        const campaignId = String(event.currentTarget?.getAttribute("data-campaign-id") || "").trim();
-        const campaign = currentOwnedCampaigns.find((c) => String(c?.campaignId || "") === campaignId);
-        if (!campaign) return;
-        loadCampaignIntoForm(campaign);
-        setNotice(`Loaded ${campaignId} into form.`);
-      });
-    }
-  }
-
-  function getSelectedCampaignIds() {
-    return Array.from(document.querySelectorAll(".campaign-select:checked"))
-      .map((node) => String(node.value || "").trim())
-      .filter(Boolean);
-  }
-
-  function getSelectedPlacementsFromForm() {
-    return Array.from(document.querySelectorAll(".campaign-placement:checked"))
-      .map((node) => String(node.value || "").trim())
-      .filter(Boolean);
-  }
-
-  function clearCampaignForm() {
-    if (campaignIdInput) campaignIdInput.value = "";
-    if (campaignNameInput) campaignNameInput.value = "";
-    if (campaignStatusInput) campaignStatusInput.value = "review";
-    if (campaignLandingInput) campaignLandingInput.value = "";
-    if (campaignMediaInput) campaignMediaInput.value = "";
-    if (campaignTitleInput) campaignTitleInput.value = "";
-    if (campaignBodyInput) campaignBodyInput.value = "";
-    if (campaignCtaInput) campaignCtaInput.value = "";
-    for (const node of document.querySelectorAll(".campaign-placement")) {
-      node.checked = false;
-    }
-  }
-
-  function loadCampaignIntoForm(campaign) {
-    if (campaignIdInput) campaignIdInput.value = String(campaign?.campaignId || "");
-    if (campaignNameInput) campaignNameInput.value = String(campaign?.name || "");
-    if (campaignStatusInput) campaignStatusInput.value = String(campaign?.status || "review");
-    if (campaignLandingInput) campaignLandingInput.value = String(campaign?.landingUrl || "");
-    if (campaignMediaInput) campaignMediaInput.value = String(campaign?.media || "");
-    if (campaignTitleInput) campaignTitleInput.value = String(campaign?.title || "");
-    if (campaignBodyInput) campaignBodyInput.value = String(campaign?.body || "");
-    if (campaignCtaInput) campaignCtaInput.value = String(campaign?.cta || "");
-
-    const placementSet = new Set(
-      Array.isArray(campaign?.placements) ? campaign.placements.map((x) => String(x?.placement || "").trim()) : []
+    const totalsFromRows = currentCampaignRows.reduce(
+      (acc, row) => {
+        acc.impressions += asFiniteNumber(row?.impressions, 0);
+        acc.clicks += asFiniteNumber(row?.clicks, 0);
+        acc.conversions += asFiniteNumber(row?.conversions, 0);
+        acc.revenueEur += asFiniteNumber(row?.revenueEur, 0);
+        return acc;
+      },
+      { impressions: 0, clicks: 0, conversions: 0, revenueEur: 0 }
     );
-    for (const node of document.querySelectorAll(".campaign-placement")) {
-      node.checked = placementSet.has(String(node.value || "").trim());
-    }
-  }
-
-  function collectFormPayload() {
-    const admin = hasAdminKey();
-    return {
-      campaignId: String(campaignIdInput?.value || "").trim(),
-      name: String(campaignNameInput?.value || "").trim(),
-      status: admin ? String(campaignStatusInput?.value || "review").trim() : "review",
-      landingUrl: String(campaignLandingInput?.value || "").trim(),
-      media: String(campaignMediaInput?.value || "").trim(),
-      title: String(campaignTitleInput?.value || "").trim(),
-      body: String(campaignBodyInput?.value || "").trim(),
-      cta: String(campaignCtaInput?.value || "").trim(),
-      placements: getSelectedPlacementsFromForm()
-    };
+    renderKpis({
+      impressions: totalsFromRows.impressions,
+      clicks: totalsFromRows.clicks,
+      conversions: totalsFromRows.conversions,
+      revenueEur: totalsFromRows.revenueEur
+    });
   }
 
   async function refreshSummary() {
@@ -397,19 +345,25 @@
     renderMetricsTable(data?.campaigns || []);
   }
 
-  async function refreshOwnedCampaigns() {
-    const token = getAuthToken();
-    if (!token) {
-      renderOwnedCampaigns([]);
-      return;
-    }
-    const response = await apiFetch("/v1/ads/campaigns/mine");
-    const data = await response.json();
-    renderOwnedCampaigns(data?.campaigns || []);
-  }
-
   function toCsv(rows) {
-    const head = ["campaign_id", "campaign_name", "placement", "status", "impressions", "clicks", "ctr_percent", "placement_fee_eur"];
+    const head = [
+      "campaign_id",
+      "campaign_name",
+      "placement",
+      "status",
+      "pricing_model",
+      "impressions",
+      "clicks",
+      "ctr_percent",
+      "conversions",
+      "conversion_rate_percent",
+      "avg_cpc_eur",
+      "estimated_revenue_eur",
+      "budget_eur",
+      "spent_eur",
+      "remaining_budget_eur",
+      "daily_limit_eur"
+    ];
     const lines = [head];
     for (const row of rows) {
       lines.push([
@@ -417,10 +371,18 @@
         String(row?.campaignName || ""),
         String((Array.isArray(row?.placements) ? row.placements : []).join("|")),
         String(row?.status || ""),
+        String(row?.pricingModel || "mixed"),
         String(Number(row?.impressions || 0)),
         String(Number(row?.clicks || 0)),
         Number(row?.ctr || 0).toFixed(2),
-        String(Number(row?.placementFeeEur || 0))
+        String(Number(row?.conversions || 0)),
+        Number(row?.conversionRate || 0).toFixed(2),
+        String(Number(row?.avgCpc || 0).toFixed(2)),
+        String(Number(row?.revenueEur || 0).toFixed(2)),
+        String(Number(row?.budgetEur || 0).toFixed(2)),
+        String(Number(row?.spentEur || 0).toFixed(2)),
+        String(Number(row?.remainingBudgetEur || 0).toFixed(2)),
+        String(Number(row?.dailyLimitEur || 0).toFixed(2))
       ]);
     }
     return lines
@@ -440,90 +402,21 @@
     URL.revokeObjectURL(url);
   }
 
-  async function setSelectedCampaignStatus(status) {
-    if (!hasAdminKey()) {
-      setNotice("Admin dashboard key is required to change campaign status.");
-      return;
-    }
-    const ids = getSelectedCampaignIds();
-    if (!ids.length) {
-      setNotice("Select one or more campaign rows first.");
-      return;
-    }
-    try {
-      const response = await apiFetch("/v1/ads/campaigns/status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ campaignIds: ids, status })
-      });
-      const data = await response.json().catch(() => ({}));
-      const updatedCount = Array.isArray(data?.updated) ? data.updated.length : 0;
-      setNotice(
-        updatedCount > 0
-          ? `Updated ${updatedCount} campaign(s) to ${status}.`
-          : `No campaigns were updated. Check admin key and deployment version.`
-      );
-      await refreshAll();
-    } catch (err) {
-      setNotice(`Status update failed: ${String(err?.message || err)}`);
-    }
-  }
-
-  async function createCampaignFromForm() {
-    const token = getAuthToken();
-    if (!token) {
-      setNotice("Sign in before creating campaigns.");
-      return;
-    }
-    const payload = collectFormPayload();
-    await apiFetch("/v1/ads/campaigns", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    setNotice(`Created campaign ${payload.campaignId || "(auto-generated id)"} successfully.`);
-    await refreshAll();
-  }
-
-  async function updateCampaignFromForm() {
-    const token = getAuthToken();
-    if (!token) {
-      setNotice("Sign in before updating campaigns.");
-      return;
-    }
-    const payload = collectFormPayload();
-    if (!payload.campaignId) {
-      setNotice("Campaign ID is required for update.");
-      return;
-    }
-    await apiFetch(`/v1/ads/campaigns/${encodeURIComponent(payload.campaignId)}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    setNotice(`Updated campaign ${payload.campaignId}.`);
-    await refreshAll();
-  }
-
   async function refreshAll() {
     try {
-      saveDashboardKey();
       updateAuthHint();
       setNotice("Loading dashboard...");
-      await Promise.all([refreshSummary(), refreshOwnedCampaigns()]);
+      await refreshSummary();
       setNotice("Dashboard loaded.");
     } catch (err) {
-      renderKpis({ impressions: 0, clicks: 0, ctr: 0, bookedPlacementFeesEur: 0 });
+      renderKpis({ impressions: 0, clicks: 0, ctr: 0, conversions: 0, revenueEur: 0 });
       renderPlacementBars([]);
       renderMetricsTable([]);
-      renderOwnedCampaigns([]);
       setNotice(`Unable to load dashboard: ${String(err?.message || err)}`);
     }
   }
 
   if (btnRefresh) btnRefresh.addEventListener("click", () => void refreshAll());
-  if (btnPause) btnPause.addEventListener("click", () => void setSelectedCampaignStatus("paused"));
-  if (btnActivate) btnActivate.addEventListener("click", () => void setSelectedCampaignStatus("active"));
   if (btnExport) {
     btnExport.addEventListener("click", () => {
       const csv = toCsv(currentCampaignRows);
@@ -531,30 +424,10 @@
       setNotice("CSV export downloaded.");
     });
   }
-  if (btnCreateCampaign) btnCreateCampaign.addEventListener("click", () => void createCampaignFromForm());
-  if (btnUpdateCampaign) btnUpdateCampaign.addEventListener("click", () => void updateCampaignFromForm());
-  if (btnReloadMine) btnReloadMine.addEventListener("click", () => void refreshOwnedCampaigns());
-  if (btnClearForm) {
-    btnClearForm.addEventListener("click", () => {
-      clearCampaignForm();
-      setNotice("Campaign form cleared.");
-    });
-  }
 
   rangeSelect.addEventListener("change", () => void refreshSummary());
   placementSelect.addEventListener("change", () => void refreshSummary());
   statusSelect.addEventListener("change", () => void refreshSummary());
-  if (dashboardKeyInput) {
-    dashboardKeyInput.addEventListener("change", () => {
-      saveDashboardKey();
-      updateAuthHint();
-      syncAdminOnlyControls();
-      void refreshSummary();
-    });
-  }
-
-  loadDashboardKey();
   updateAuthHint();
-  syncAdminOnlyControls();
   void refreshAll();
 })();

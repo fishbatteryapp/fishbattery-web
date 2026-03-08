@@ -2156,7 +2156,7 @@ input[type="file"]::-webkit-file-upload-button:hover {
 .dashboard-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 840px;
+  min-width: 1500px;
 }
 
 .campaign-select {
@@ -2186,17 +2186,33 @@ input[type="file"]::-webkit-file-upload-button:hover {
 }
 
 .dashboard-table td:nth-child(1),
+.dashboard-table td:nth-child(3),
 .dashboard-table td:nth-child(4),
 .dashboard-table td:nth-child(5),
 .dashboard-table td:nth-child(6),
 .dashboard-table td:nth-child(7),
 .dashboard-table td:nth-child(8),
+.dashboard-table td:nth-child(9),
+.dashboard-table td:nth-child(10),
+.dashboard-table td:nth-child(11),
+.dashboard-table td:nth-child(12),
+.dashboard-table td:nth-child(13),
+.dashboard-table td:nth-child(14),
+.dashboard-table td:nth-child(15),
 .dashboard-table th:nth-child(1),
+.dashboard-table th:nth-child(3),
 .dashboard-table th:nth-child(4),
 .dashboard-table th:nth-child(5),
 .dashboard-table th:nth-child(6),
 .dashboard-table th:nth-child(7),
-.dashboard-table th:nth-child(8) {
+.dashboard-table th:nth-child(8),
+.dashboard-table th:nth-child(9),
+.dashboard-table th:nth-child(10),
+.dashboard-table th:nth-child(11),
+.dashboard-table th:nth-child(12),
+.dashboard-table th:nth-child(13),
+.dashboard-table th:nth-child(14),
+.dashboard-table th:nth-child(15) {
   white-space: nowrap;
 }
 
@@ -2204,10 +2220,24 @@ input[type="file"]::-webkit-file-upload-button:hover {
 .dashboard-table td:nth-child(6),
 .dashboard-table td:nth-child(7),
 .dashboard-table td:nth-child(8),
+.dashboard-table td:nth-child(9),
+.dashboard-table td:nth-child(10),
+.dashboard-table td:nth-child(11),
+.dashboard-table td:nth-child(12),
+.dashboard-table td:nth-child(13),
+.dashboard-table td:nth-child(14),
+.dashboard-table td:nth-child(15),
 .dashboard-table th:nth-child(5),
 .dashboard-table th:nth-child(6),
 .dashboard-table th:nth-child(7),
-.dashboard-table th:nth-child(8) {
+.dashboard-table th:nth-child(8),
+.dashboard-table th:nth-child(9),
+.dashboard-table th:nth-child(10),
+.dashboard-table th:nth-child(11),
+.dashboard-table th:nth-child(12),
+.dashboard-table th:nth-child(13),
+.dashboard-table th:nth-child(14),
+.dashboard-table th:nth-child(15) {
   text-align: right;
 }
 

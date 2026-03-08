@@ -359,7 +359,7 @@
       {
         id: "your-ad-here",
         title: "Sponsored: Your brand name here",
-        body: "Want to reach an engaged Minecraft audience? Advertise with transparent fixed placement pricing.",
+        body: "Want to reach an engaged Minecraft audience? Advertise with transparent impression and click pricing.",
         cta: "Apply now",
         link: "https://fishbattery.app/advertise.html",
         media: "Advertise",

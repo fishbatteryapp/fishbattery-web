@@ -37,94 +37,16 @@
 
       <header class="card ads-hero">
         <p class="kicker">Publisher dashboard</p>
-        <h1>Campaign analytics and tools</h1>
+        <h1>Campaign analytics</h1>
         <p class="lead">
-          View performance by placement, compare time windows, and manage campaign actions from one control surface.
+          View performance by placement, compare time windows, and monitor delivery.
         </p>
         <p id="dashboardAuthHint" class="hint">
-          Sign in to manage your own campaigns. Dashboard key can optionally unlock admin-all view.
+          Sign in to view your own campaign stats.
         </p>
       </header>
 
-      <section class="card">
-        <p class="kicker">Campaign manager</p>
-        <h2>Create or update your campaigns</h2>
-        <div class="ads-form-grid">
-          <div class="field">
-            <span>Campaign ID (optional for create)</span>
-            <input id="campaignIdInput" type="text" placeholder="camp_mybrand_april" autocomplete="off" />
-          </div>
-          <div class="field">
-            <span>Campaign name</span>
-            <input id="campaignNameInput" type="text" placeholder="My Brand Spring Launch" autocomplete="off" />
-          </div>
-          <div class="field">
-            <span>Status (admin only)</span>
-            <select id="campaignStatusInput" disabled>
-              <option value="review" selected>In review</option>
-              <option value="active">Active</option>
-              <option value="paused">Paused</option>
-            </select>
-          </div>
-          <div class="field">
-            <span>Landing URL</span>
-            <input id="campaignLandingInput" type="url" placeholder="https://example.com" autocomplete="off" />
-          </div>
-          <div class="field">
-            <span>Media label</span>
-            <input id="campaignMediaInput" type="text" placeholder="Hosting" autocomplete="off" />
-          </div>
-          <div class="field">
-            <span>Title</span>
-            <input id="campaignTitleInput" type="text" placeholder="Sponsored: Fast server hosting" autocomplete="off" />
-          </div>
-          <div class="field">
-            <span>Body</span>
-            <textarea id="campaignBodyInput" rows="3" placeholder="Low latency EU nodes, instant setup, and 24/7 support."></textarea>
-          </div>
-          <div class="field">
-            <span>CTA</span>
-            <input id="campaignCtaInput" type="text" placeholder="Start now" autocomplete="off" />
-          </div>
-        </div>
-        <div class="ads-placement-picker">
-          <label><input type="checkbox" class="campaign-placement" value="website-home-main" /> Website home (EUR 20)</label>
-          <label><input type="checkbox" class="campaign-placement" value="website-download-main" /> Website download (EUR 45)</label>
-          <label><input type="checkbox" class="campaign-placement" value="launcher-sidebar" /> Launcher sidebar (EUR 100)</label>
-        </div>
-        <div class="ads-tools-grid">
-          <button class="btn btn-primary" type="button" id="btnCreateCampaign">Create campaign</button>
-          <button class="btn" type="button" id="btnUpdateCampaign">Update campaign</button>
-          <button class="btn" type="button" id="btnReloadMine">Reload my campaigns</button>
-          <button class="btn" type="button" id="btnClearForm">Clear form</button>
-        </div>
-      </section>
-
-      <section class="card">
-        <p class="kicker">My campaigns</p>
-        <h2>Owned by your account</h2>
-        <div class="dashboard-table-wrap">
-          <table class="dashboard-table">
-            <thead>
-              <tr>
-                <th>Campaign ID</th>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Placements</th>
-                <th>Last update</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="ownedCampaignRows"></tbody>
-          </table>
-        </div>
-      </section>
-
       <section class="card dashboard-controls">
-        <div class="field">
-          <span>Publisher key (optional)</span>
-          <input id="dashboardKey" type="password" placeholder="Enter dashboard key if required" autocomplete="off" />
-        </div>
         <div class="field">
           <span>Time range</span>
           <select id="rangeSelect">
@@ -167,8 +89,24 @@
           <p id="kpiCtr" class="ads-kpi-value">0%</p>
         </article>
         <article class="card ads-kpi-card">
-          <p class="ads-kpi-label">Booked placement fees</p>
-          <p id="kpiSpend" class="ads-kpi-value">EUR 0</p>
+          <p class="ads-kpi-label">Estimated Revenue</p>
+          <p id="kpiRevenue" class="ads-kpi-value">EUR 0.00</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">eCPM</p>
+          <p id="kpiEcpm" class="ads-kpi-value">EUR 0.00</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Conversions</p>
+          <p id="kpiConversions" class="ads-kpi-value">0</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Conversion Rate</p>
+          <p id="kpiConversionRate" class="ads-kpi-value">0%</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Average CPC</p>
+          <p id="kpiAvgCpc" class="ads-kpi-value">EUR 0.00</p>
         </article>
       </section>
 
@@ -185,14 +123,21 @@
           <table class="dashboard-table">
             <thead>
               <tr>
-                <th>Select</th>
                 <th>Campaign</th>
                 <th>Placement</th>
                 <th>Status</th>
+                <th>Pricing</th>
                 <th>Impressions</th>
                 <th>Clicks</th>
                 <th>CTR</th>
-                <th>Placement fee</th>
+                <th>Conversions</th>
+                <th>Conv. rate</th>
+                <th>Avg CPC</th>
+                <th>Est. revenue</th>
+                <th>Budget</th>
+                <th>Spent</th>
+                <th>Remaining</th>
+                <th>Daily limit</th>
               </tr>
             </thead>
             <tbody id="campaignRows"></tbody>
@@ -205,10 +150,8 @@
         <h2>Quick actions</h2>
         <div class="ads-tools-grid">
           <button class="btn" type="button" id="btnExport">Export CSV report</button>
-          <button class="btn" type="button" id="btnPause">Pause selected campaigns</button>
-          <button class="btn" type="button" id="btnActivate">Set selected active</button>
           <button class="btn" type="button" id="btnRefresh">Refresh live data</button>
-          <a class="btn btn-primary" href="mailto:ads@fishbattery.app?subject=Fishbattery%20Creative%20Update">Request creative update</a>
+          <a class="btn btn-primary" href="mailto:ads@fishbattery.app?subject=Fishbattery%20Campaign%20Request">Request campaign changes</a>
         </div>
         <p id="dashboardNotice" class="hint">Choose filters above to focus performance views.</p>
       </section>
