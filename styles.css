@@ -449,6 +449,21 @@ h2 {
   margin-bottom: 6px;
 }
 
+.sponsored-fallback-image {
+  display: none;
+  width: 100%;
+  height: clamp(120px, 24vw, 220px);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sponsored-fallback.has-image .sponsored-fallback-image {
+  display: block;
+}
+
 .sponsored-fallback-body {
   font-size: 14px;
   line-height: 1.45;

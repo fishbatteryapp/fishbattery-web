@@ -189,11 +189,12 @@
     const cta = String(ad?.cta || "Learn more").trim();
     const link = String(ad?.link || "").trim();
     const media = String(ad?.media || "Sponsored").trim();
+    const imageUrl = String(ad?.imageUrl || "").trim();
     const placements = Array.isArray(ad?.placements) ? ad.placements.map((x) => String(x || "").trim()) : [];
     const active = ad?.active !== false;
 
     if (!active || !title || !body || !/^https?:\/\//i.test(link)) return null;
-    return { id, title, body, cta, link, media, placements };
+    return { id, title, body, cta, link, media, imageUrl, placements };
   }
 
   // Pick one ad for a given placement, rotating deterministically via localStorage cursor.
@@ -221,6 +222,8 @@
             <span class="sponsored-fallback-label">Sponsored</span>
             <span class="sponsored-fallback-media"></span>
           </div>
+
+          <div class="sponsored-fallback-image" aria-hidden="true"></div>
   
           <div class="sponsored-fallback-title"></div>
           <div class="sponsored-fallback-body"></div>
@@ -241,6 +244,7 @@
     const titleEl = wrap.querySelector(".sponsored-fallback-title");
     const bodyEl = wrap.querySelector(".sponsored-fallback-body");
     const ctaEl = wrap.querySelector(".sponsored-fallback-cta");
+    const imageEl = wrap.querySelector(".sponsored-fallback-image");
     const kickerEl = slot.querySelector(".sponsored-kicker");
   
     if (mediaEl) mediaEl.textContent = ad.media ? `- ${ad.media}` : "";
@@ -258,6 +262,16 @@
       }
     }
     if (kickerEl) kickerEl.textContent = ad.media ? `Sponsored - ${ad.media}` : "Sponsored";
+    if (imageEl) {
+      if (/^https?:\/\//i.test(ad.imageUrl || "")) {
+        imageEl.style.backgroundImage =
+          `linear-gradient(180deg, rgba(4,10,18,0.08), rgba(4,10,18,0.5)), url("${ad.imageUrl}")`;
+        wrap.classList.add("has-image");
+      } else {
+        imageEl.style.backgroundImage = "";
+        wrap.classList.remove("has-image");
+      }
+    }
   }
 
 
