@@ -390,6 +390,8 @@ h2 {
 .sponsored-slot {
   display: grid;
   gap: 0.55rem;
+  position: relative;
+  padding-bottom: 78px;
   background:
     radial-gradient(560px 180px at 50% -20%, rgba(111, 211, 255, 0.11), transparent 72%),
     rgba(8, 20, 33, 0.66);
@@ -404,7 +406,12 @@ h2 {
 }
 
 .sponsored-slot .actions {
-  justify-content: center;
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  margin: 0;
+  justify-content: flex-end;
+  z-index: 3;
 }
 
 .sponsored-adsense-wrap {
@@ -415,16 +422,15 @@ h2 {
 /* Sponsored fallback (used in ?ads_test=1 or when AdSense fails) */
 .sponsored-adsense-wrap .sponsored-fallback {
   width: 100%;
-  display: flex;
-  justify-content: center; /* centers the inner card inside your slot */
+  display: block;
 }
 
 .sponsored-fallback-inner {
-  width: min(720px, 100%);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 16px;
-  padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.03);
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
   text-align: left;
 }
 
@@ -436,7 +442,7 @@ h2 {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.75;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .sponsored-fallback-label {
@@ -452,7 +458,7 @@ h2 {
 .sponsored-fallback-image {
   display: none;
   width: 100%;
-  height: clamp(120px, 24vw, 220px);
+  height: clamp(170px, 31vw, 340px);
   border-radius: 12px;
   margin-bottom: 10px;
   background-size: cover;
@@ -468,12 +474,23 @@ h2 {
   font-size: 14px;
   line-height: 1.45;
   opacity: 0.9;
-  margin-bottom: 12px;
+  margin-bottom: 0;
 }
 
 .sponsored-fallback-actions {
   display: flex;
   justify-content: flex-start;
+}
+
+@media (max-width: 760px) {
+  .sponsored-slot {
+    padding-bottom: 72px;
+  }
+
+  .sponsored-slot .actions {
+    right: 12px;
+    bottom: 10px;
+  }
 }
 
 /* Footer and legal navigation */
