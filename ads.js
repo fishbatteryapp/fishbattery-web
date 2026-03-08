@@ -36,6 +36,10 @@
   let fallbackRendered = false;
   let trackedImpressionKeys = new Set();
   const FEED_TIMEOUT_MS = 2200;
+  const EVENT_FLUSH_MS = 8000;
+  const EVENT_BATCH_MAX = 20;
+  let eventQueue = [];
+  let flushTimer = null;
 
   function getApiBases() {
     const resolved = (localStorage.getItem("fishbattery.apiBaseResolved") || "").trim();
@@ -57,8 +61,8 @@
     return value;
   }
 
-  async function postAdEvent(eventType, campaignId, placement) {
-    const payload = {
+  function buildAdEventPayload(eventType, campaignId, placement) {
+    return {
       eventType,
       campaignId: String(campaignId || "").trim().toLowerCase(),
       placement: String(placement || "").trim().toLowerCase(),
@@ -72,14 +76,21 @@
         }
       })()
     };
-    if (!payload.campaignId || !payload.placement) return;
+  }
 
+  async function flushAdEvents() {
+    if (!eventQueue.length) return;
+    const batch = eventQueue.splice(0, EVENT_BATCH_MAX);
+    if (flushTimer) {
+      clearTimeout(flushTimer);
+      flushTimer = null;
+    }
     for (const base of getApiBases()) {
       try {
         const response = await fetch(`${base}/v1/ads/events`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ events: batch })
         });
         if (!response.ok) continue;
         localStorage.setItem("fishbattery.apiBaseResolved", base);
@@ -88,6 +99,41 @@
         // try next base
       }
     }
+    eventQueue = [...batch.slice(-EVENT_BATCH_MAX), ...eventQueue].slice(0, 200);
+  }
+
+  function queueAdEvent(eventType, campaignId, placement) {
+    const payload = buildAdEventPayload(eventType, campaignId, placement);
+    if (!payload.campaignId || !payload.placement) return;
+    eventQueue.push(payload);
+    if (eventQueue.length >= EVENT_BATCH_MAX) {
+      void flushAdEvents();
+      return;
+    }
+    if (!flushTimer) {
+      flushTimer = setTimeout(() => {
+        flushTimer = null;
+        void flushAdEvents();
+      }, EVENT_FLUSH_MS);
+    }
+  }
+
+  function flushAdEventsOnUnload() {
+    if (!eventQueue.length) return;
+    const batch = eventQueue.splice(0, EVENT_BATCH_MAX);
+    const body = JSON.stringify({ events: batch });
+    for (const base of getApiBases()) {
+      try {
+        const ok = navigator.sendBeacon?.(`${base}/v1/ads/events`, new Blob([body], { type: "application/json" }));
+        if (ok) return;
+      } catch {
+        // try next base
+      }
+    }
+  }
+
+  async function postAdEvent(eventType, campaignId, placement) {
+    queueAdEvent(eventType, campaignId, placement);
   }
 
   async function fetchJsonWithTimeout(url, timeoutMs = FEED_TIMEOUT_MS, options = {}) {
@@ -456,5 +502,14 @@
   window.addEventListener("fishbattery:consent-changed", (event) => {
     const consented = !!event?.detail?.advertising;
     void renderForConsentState(consented);
+  });
+
+  window.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      flushAdEventsOnUnload();
+    }
+  });
+  window.addEventListener("beforeunload", () => {
+    flushAdEventsOnUnload();
   });
 })();

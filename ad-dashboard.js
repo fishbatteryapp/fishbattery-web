@@ -12,12 +12,18 @@
   const kpiConversions = document.getElementById("kpiConversions");
   const kpiConversionRate = document.getElementById("kpiConversionRate");
   const kpiAvgCpc = document.getElementById("kpiAvgCpc");
+  const kpiAccountBudget = document.getElementById("kpiAccountBudget");
+  const kpiAccountRemaining = document.getElementById("kpiAccountRemaining");
+  const kpiAccountDailyLimit = document.getElementById("kpiAccountDailyLimit");
   const placementBars = document.getElementById("placementBars");
   const campaignRows = document.getElementById("campaignRows");
   const notice = document.getElementById("dashboardNotice");
 
   const btnExport = document.getElementById("btnExport");
   const btnRefresh = document.getElementById("btnRefresh");
+  const btnAddBudget = document.getElementById("btnAddBudget");
+  const budgetTopupAmountInput = document.getElementById("budgetTopupAmount");
+  const quickTopupButtons = Array.from(document.querySelectorAll("[data-topup-amount]"));
 
   if (!rangeSelect || !placementSelect || !statusSelect || !campaignRows) return;
 
@@ -176,6 +182,19 @@
     if (kpiAvgCpc) kpiAvgCpc.textContent = formatMoneyEur(avgCpc);
   }
 
+  function renderAccountBudget(accountBudget, totals) {
+    const budget = asFiniteNumber(accountBudget?.budgetEur ?? totals?.budgetEur, 0);
+    const spent = asFiniteNumber(accountBudget?.spentEur ?? totals?.spendEur, 0);
+    const remaining = asFiniteNumber(
+      accountBudget?.remainingBudgetEur ?? totals?.remainingBudgetEur ?? (budget > 0 ? Math.max(0, budget - spent) : 0),
+      0
+    );
+    const dailyLimit = asFiniteNumber(accountBudget?.dailyLimitEur ?? totals?.dailyLimitEur, 0);
+    if (kpiAccountBudget) kpiAccountBudget.textContent = budget > 0 ? formatMoneyEur(budget) : "-";
+    if (kpiAccountRemaining) kpiAccountRemaining.textContent = budget > 0 ? formatMoneyEur(remaining) : "-";
+    if (kpiAccountDailyLimit) kpiAccountDailyLimit.textContent = dailyLimit > 0 ? `${formatMoneyEur(dailyLimit)}/day` : "-";
+  }
+
   function renderPlacementBars(rows) {
     if (!placementBars) return;
     const listRaw = Array.isArray(rows) ? rows : [];
@@ -229,8 +248,6 @@
         clicks: 0,
         conversions: 0,
         revenueEur: 0,
-        budgetEur: asFiniteNumber(row?.budgetEur ?? row?.budget, 0),
-        dailyLimitEur: asFiniteNumber(row?.dailyLimitEur ?? row?.dailyLimit, 0),
         placements: []
       };
 
@@ -247,8 +264,6 @@
       existing.clicks += rowClicks;
       existing.conversions += rowConversions;
       existing.revenueEur += rowRevenue;
-      if (!existing.budgetEur) existing.budgetEur = asFiniteNumber(row?.budgetEur ?? row?.budget, 0);
-      if (!existing.dailyLimitEur) existing.dailyLimitEur = asFiniteNumber(row?.dailyLimitEur ?? row?.dailyLimit, 0);
       grouped.set(campaignId, existing);
     }
 
@@ -258,8 +273,7 @@
         ctr: row.impressions > 0 ? (row.clicks / row.impressions) * 100 : 0,
         conversionRate: row.clicks > 0 ? (row.conversions / row.clicks) * 100 : 0,
         avgCpc: row.clicks > 0 ? row.revenueEur / row.clicks : 0,
-        spentEur: row.revenueEur,
-        remainingBudgetEur: row.budgetEur > 0 ? Math.max(0, row.budgetEur - row.revenueEur) : 0
+        spentEur: row.revenueEur
       }))
       .sort((a, b) => {
         if (b.impressions !== a.impressions) return b.impressions - a.impressions;
@@ -267,7 +281,7 @@
       });
 
     if (!currentCampaignRows.length) {
-      campaignRows.innerHTML = `<tr><td colspan="15">No campaign metrics match the selected filters.</td></tr>`;
+      campaignRows.innerHTML = `<tr><td colspan="11">No campaign metrics match the selected filters.</td></tr>`;
       return;
     }
     campaignRows.innerHTML = currentCampaignRows
@@ -288,10 +302,6 @@
         const conversionRate = asFiniteNumber(row?.conversionRate, 0);
         const avgCpc = asFiniteNumber(row?.avgCpc, 0);
         const revenue = asFiniteNumber(row?.revenueEur, 0);
-        const budget = asFiniteNumber(row?.budgetEur, 0);
-        const spent = asFiniteNumber(row?.spentEur, 0);
-        const remaining = asFiniteNumber(row?.remainingBudgetEur, 0);
-        const dailyLimit = asFiniteNumber(row?.dailyLimitEur, 0);
         return `
           <tr>
             <td><strong>${campaignName}</strong></td>
@@ -305,10 +315,6 @@
             <td>${conversionRate.toFixed(2)}%</td>
             <td>${formatMoneyEur(avgCpc)}</td>
             <td>${formatMoneyEur(revenue)}</td>
-            <td>${budget > 0 ? formatMoneyEur(budget) : "-"}</td>
-            <td>${formatMoneyEur(spent)}</td>
-            <td>${budget > 0 ? formatMoneyEur(remaining) : "-"}</td>
-            <td>${dailyLimit > 0 ? `${formatMoneyEur(dailyLimit)}/day` : "-"}</td>
           </tr>
         `;
       })
@@ -341,8 +347,31 @@
     const response = await apiFetch(`/v1/ads/dashboard/summary?${query.toString()}`);
     const data = await response.json();
     renderKpis(data?.totals || {});
+    renderAccountBudget(data?.accountBudget || {}, data?.totals || {});
     renderPlacementBars(data?.byPlacement || []);
     renderMetricsTable(data?.campaigns || []);
+  }
+
+  async function addBudget(amountEur) {
+    const token = getAuthToken();
+    if (!token) {
+      setNotice("Sign in first to add budget.");
+      return;
+    }
+    const amount = asFiniteNumber(amountEur, 0);
+    if (amount <= 0) {
+      setNotice("Enter a valid budget amount.");
+      return;
+    }
+    const rounded = Math.round(amount * 100) / 100;
+    setNotice(`Adding ${formatMoneyEur(rounded)} to your account budget...`);
+    await apiFetch("/v1/ads/account-budget/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amountEur: rounded })
+    });
+    await refreshSummary();
+    setNotice(`Added ${formatMoneyEur(rounded)} to your account budget.`);
   }
 
   function toCsv(rows) {
@@ -358,11 +387,7 @@
       "conversions",
       "conversion_rate_percent",
       "avg_cpc_eur",
-      "estimated_revenue_eur",
-      "budget_eur",
-      "spent_eur",
-      "remaining_budget_eur",
-      "daily_limit_eur"
+      "estimated_revenue_eur"
     ];
     const lines = [head];
     for (const row of rows) {
@@ -378,11 +403,7 @@
         String(Number(row?.conversions || 0)),
         Number(row?.conversionRate || 0).toFixed(2),
         String(Number(row?.avgCpc || 0).toFixed(2)),
-        String(Number(row?.revenueEur || 0).toFixed(2)),
-        String(Number(row?.budgetEur || 0).toFixed(2)),
-        String(Number(row?.spentEur || 0).toFixed(2)),
-        String(Number(row?.remainingBudgetEur || 0).toFixed(2)),
-        String(Number(row?.dailyLimitEur || 0).toFixed(2))
+        String(Number(row?.revenueEur || 0).toFixed(2))
       ]);
     }
     return lines
@@ -410,6 +431,7 @@
       setNotice("Dashboard loaded.");
     } catch (err) {
       renderKpis({ impressions: 0, clicks: 0, ctr: 0, conversions: 0, revenueEur: 0 });
+      renderAccountBudget({}, {});
       renderPlacementBars([]);
       renderMetricsTable([]);
       setNotice(`Unable to load dashboard: ${String(err?.message || err)}`);
@@ -417,6 +439,19 @@
   }
 
   if (btnRefresh) btnRefresh.addEventListener("click", () => void refreshAll());
+  if (btnAddBudget) {
+    btnAddBudget.addEventListener("click", () => {
+      const raw = budgetTopupAmountInput && "value" in budgetTopupAmountInput ? budgetTopupAmountInput.value : "0";
+      void addBudget(raw);
+    });
+  }
+  for (const button of quickTopupButtons) {
+    button.addEventListener("click", () => {
+      const raw = button.getAttribute("data-topup-amount") || "0";
+      if (budgetTopupAmountInput && "value" in budgetTopupAmountInput) budgetTopupAmountInput.value = raw;
+      void addBudget(raw);
+    });
+  }
   if (btnExport) {
     btnExport.addEventListener("click", () => {
       const csv = toCsv(currentCampaignRows);

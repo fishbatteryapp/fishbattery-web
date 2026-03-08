@@ -108,6 +108,18 @@
           <p class="ads-kpi-label">Average CPC</p>
           <p id="kpiAvgCpc" class="ads-kpi-value">EUR 0.00</p>
         </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Account Budget</p>
+          <p id="kpiAccountBudget" class="ads-kpi-value">-</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Remaining Budget</p>
+          <p id="kpiAccountRemaining" class="ads-kpi-value">-</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Daily Limit</p>
+          <p id="kpiAccountDailyLimit" class="ads-kpi-value">-</p>
+        </article>
       </section>
 
       <section class="card">
@@ -134,10 +146,6 @@
                 <th>Conv. rate</th>
                 <th>Avg CPC</th>
                 <th>Est. revenue</th>
-                <th>Budget</th>
-                <th>Spent</th>
-                <th>Remaining</th>
-                <th>Daily limit</th>
               </tr>
             </thead>
             <tbody id="campaignRows"></tbody>
@@ -148,6 +156,16 @@
       <section class="card">
         <p class="kicker">Publisher tools</p>
         <h2>Quick actions</h2>
+        <div class="ads-budget-topup">
+          <label for="budgetTopupAmount">Add budget (EUR)</label>
+          <input id="budgetTopupAmount" type="number" min="1" step="1" value="25" />
+          <div class="ads-budget-topup-quick">
+            <button class="btn" type="button" data-topup-amount="25">+ EUR 25</button>
+            <button class="btn" type="button" data-topup-amount="50">+ EUR 50</button>
+            <button class="btn" type="button" data-topup-amount="100">+ EUR 100</button>
+            <button class="btn btn-primary" type="button" id="btnAddBudget">Add funds</button>
+          </div>
+        </div>
         <div class="ads-tools-grid">
           <button class="btn" type="button" id="btnExport">Export CSV report</button>
           <button class="btn" type="button" id="btnRefresh">Refresh live data</button>
@@ -174,6 +192,6 @@
     </main>
     <script src="./consent.js"></script>
     <script src="./site-nav.js"></script>
-    <script src="./ad-dashboard.js"></script>
+    <script src="./ad-dashboard.js?v=0.4.7"></script>
   </body>
 </html>
