@@ -218,11 +218,6 @@
       wrap.className = "sponsored-fallback";
       wrap.innerHTML = `
         <div class="sponsored-fallback-inner">
-          <div class="sponsored-fallback-meta">
-            <span class="sponsored-fallback-label">Sponsored</span>
-            <span class="sponsored-fallback-media"></span>
-          </div>
-
           <div class="sponsored-fallback-image" aria-hidden="true"></div>
   
           <div class="sponsored-fallback-title"></div>
@@ -236,14 +231,15 @@
     }
   
     // Fill
-    const mediaEl = wrap.querySelector(".sponsored-fallback-media");
     const titleEl = wrap.querySelector(".sponsored-fallback-title");
     const bodyEl = wrap.querySelector(".sponsored-fallback-body");
     const imageEl = wrap.querySelector(".sponsored-fallback-image");
     const kickerEl = slot.querySelector(".sponsored-kicker");
-  
-    if (mediaEl) mediaEl.textContent = ad.media ? `• ${ad.media}` : "";
-    if (titleEl) titleEl.textContent = ad.title;
+
+    const cleanTitle = String(ad.title || "")
+      .replace(/^\s*sponsored\s*:\s*/i, "")
+      .trim();
+    if (titleEl) titleEl.textContent = cleanTitle || "Partner";
     if (bodyEl) bodyEl.textContent = ad.body;
     wrap.style.cursor = "pointer";
     wrap.setAttribute("role", "link");

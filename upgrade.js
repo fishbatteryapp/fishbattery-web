@@ -50,6 +50,12 @@
     return (localStorage.getItem("fishbattery.token") || "").trim();
   }
 
+  function setAuthToken(nextToken) {
+    const value = String(nextToken || "").trim();
+    if (!value) return;
+    localStorage.setItem("fishbattery.token", value);
+  }
+
   async function parseResponse(response) {
     // Handles JSON and plain text API responses.
     const text = await response.text();
@@ -114,6 +120,7 @@
         Authorization: `Bearer ${token}`
       }
     });
+    if (data?.accessToken) setAuthToken(data.accessToken);
     const account = data?.account;
     if (account) {
       sessionSummary.textContent = `Signed in as ${account.displayName} (${account.email})`;

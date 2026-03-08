@@ -145,8 +145,12 @@
           sawTransientFailure = true;
           continue;
         }
+        const refreshedToken = String(data?.accessToken || "").trim();
         // Persist successful base and account cache.
         localStorage.setItem("fishbattery.apiBaseResolved", base);
+        if (refreshedToken) {
+          localStorage.setItem("fishbattery.token", refreshedToken);
+        }
         localStorage.setItem("fishbattery.account", JSON.stringify(account));
         return { status: "ok", account };
       } catch {

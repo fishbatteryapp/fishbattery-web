@@ -135,6 +135,12 @@
     localStorage.removeItem("fishbattery.account");
   }
 
+  function setAuthToken(nextToken) {
+    const value = String(nextToken || "").trim();
+    if (!value) return;
+    localStorage.setItem("fishbattery.token", value);
+  }
+
   // If token exists and is valid, skip login page and move to account settings.
   async function tryRestoreSession() {
     const token = (localStorage.getItem("fishbattery.token") || "").trim();
@@ -145,6 +151,7 @@
           Authorization: `Bearer ${token}`
         }
       });
+      if (data?.accessToken) setAuthToken(data.accessToken);
       if (data?.account) localStorage.setItem("fishbattery.account", JSON.stringify(data.account));
       window.location.href = "./account.html";
     } catch (error) {
@@ -195,7 +202,7 @@
     });
 
     if (!data?.accessToken) throw new Error("Google sign-in did not return a session token");
-    localStorage.setItem("fishbattery.token", data.accessToken);
+    setAuthToken(data.accessToken);
     if (data.account) localStorage.setItem("fishbattery.account", JSON.stringify(data.account));
     query.delete("code");
     query.delete("state");
@@ -291,7 +298,7 @@
       }
 
       if (!data?.accessToken) throw new Error("Missing session token");
-      localStorage.setItem("fishbattery.token", data.accessToken);
+      setAuthToken(data.accessToken);
       if (data.account) localStorage.setItem("fishbattery.account", JSON.stringify(data.account));
       write("Success. Redirecting...");
       window.location.href = "./account.html";

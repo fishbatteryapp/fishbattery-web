@@ -353,6 +353,7 @@
     const session = await request("/v1/auth/session", {
       headers: { Authorization: `Bearer ${authToken}` }
     });
+    if (session?.accessToken) setAuthToken(session.accessToken);
     const account = session?.account;
     if (!account) throw new Error("Could not load account");
     canChangePassword = !!account.canChangePassword;
