@@ -364,14 +364,20 @@
       return;
     }
     const rounded = Math.round(amount * 100) / 100;
-    setNotice(`Adding ${formatMoneyEur(rounded)} to your account budget...`);
-    await apiFetch("/v1/ads/account-budget/add", {
+    setNotice(`Opening secure checkout for ${formatMoneyEur(rounded)}...`);
+    const successUrl = `${window.location.origin}${window.location.pathname}?topup=success`;
+    const cancelUrl = `${window.location.origin}${window.location.pathname}?topup=cancel`;
+    const response = await apiFetch("/v1/ads/account-budget/topup-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amountEur: rounded })
+      body: JSON.stringify({ amountEur: rounded, successUrl, cancelUrl })
     });
-    await refreshSummary();
-    setNotice(`Added ${formatMoneyEur(rounded)} to your account budget.`);
+    const data = await response.json();
+    const url = String(data?.url || "").trim();
+    if (!/^https?:\/\//i.test(url)) {
+      throw new Error("Checkout URL missing from server response");
+    }
+    window.location.href = url;
   }
 
   function toCsv(rows) {
@@ -463,6 +469,14 @@
   rangeSelect.addEventListener("change", () => void refreshSummary());
   placementSelect.addEventListener("change", () => void refreshSummary());
   statusSelect.addEventListener("change", () => void refreshSummary());
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const topupState = String(params.get("topup") || "").trim().toLowerCase();
+    if (topupState === "success") setNotice("Top-up payment completed. Refreshing budget...");
+    if (topupState === "cancel") setNotice("Top-up checkout canceled.");
+  } catch {
+    // ignore
+  }
   updateAuthHint();
   void refreshAll();
 })();

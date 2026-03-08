@@ -13,9 +13,6 @@
   const slots = Array.from(document.querySelectorAll(".sponsored-slot[data-ad-placement]"));
   if (!slots.length) return;
 
-  // Static fallback feeds (used when API feed is unavailable).
-  const FEED_URLS = ["./assets/ads.json", "https://fishbatteryapp.github.io/fishbattery-web/assets/ads.json"];
-
   // AdSense bootstrap source.
   const ADSENSE_SRC =
     "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8826985281954941";
@@ -266,7 +263,10 @@
 
   // Render fallback ads into all slots when feed data is available.
   function renderFallback(ads, { hideAdsenseIns = false } = {}) {
-    if (!Array.isArray(ads) || !ads.length) return;
+    if (!Array.isArray(ads) || !ads.length) {
+      for (const slot of slots) slot.classList.add("hidden");
+      return;
+    }
 
     for (const slot of slots) {
       const placement = String(slot.getAttribute("data-ad-placement") || "").trim();
@@ -274,6 +274,7 @@
 
       const ad = pickAdForPlacement(ads, placement);
       if (!ad) continue;
+      slot.classList.remove("hidden");
 
       if (hideAdsenseIns) {
         const ins = slot.querySelector("ins.adsbygoogle");
@@ -366,9 +367,8 @@
     return [];
   }
 
-  // Fetch and normalize fallback feed.
+  // Fetch and normalize API feed.
   async function loadFeed() {
-    // Prefer live API feed so campaign updates appear immediately.
     const placementSet = Array.from(
       new Set(
         slots
@@ -379,39 +379,7 @@
     const apiResults = await Promise.all(placementSet.map((placement) => loadApiFeedByPlacement(placement)));
     const fromApi = apiResults.flat().filter(Boolean);
     if (fromApi.length) return fromApi;
-
-    // Fall back to static JSON if API feed is unavailable.
-    for (const url of FEED_URLS) {
-      try {
-        const response = await fetchJsonWithTimeout(url, FEED_TIMEOUT_MS, { cache: "no-store" });
-        if (!response.ok) continue;
-        const json = await response.json();
-        const adsRaw = Array.isArray(json?.ads) ? json.ads : [];
-        const ads = adsRaw.map(normalizeAd).filter(Boolean);
-        if (ads.length) return ads;
-      } catch {
-        // try next source
-      }
-    }
-    // Last-resort house ad so sponsored slot is never blank.
-    const placements = Array.from(
-      new Set(
-        slots
-          .map((slot) => String(slot.getAttribute("data-ad-placement") || "").trim().toLowerCase())
-          .filter(Boolean)
-      )
-    );
-    return [
-      {
-        id: "your-ad-here",
-        title: "Sponsored: Your brand name here",
-        body: "Want to reach an engaged Minecraft audience? Advertise with transparent impression and click pricing.",
-        cta: "Apply now",
-        link: "https://fishbattery.app/advertise.html",
-        media: "Advertise",
-        placements
-      }
-    ];
+    return [];
   }
 
   // Single render entry for consent state transitions.
@@ -440,56 +408,9 @@
       return;
     }
 
-    try {
-      const count = await renderAdsenseSlots();
-
-      // If nothing got pushed, fallback immediately.
-      if (!count) {
-        const ads = await loadFeed();
-        renderFallback(ads);
-        fallbackRendered = true;
-        return;
-      }
-
-      // AdSense slots are still first-party placements for impression analytics.
-      for (const slot of slots) {
-        const placement = String(slot.getAttribute("data-ad-placement") || "").trim().toLowerCase();
-        if (!placement) continue;
-        observeAndTrackSlot(slot, campaignIdFromPlacement(placement), placement);
-      }
-
-      // If AdSense pushes but doesn't fill, fallback after a short delay.
-      fallbackTimer = setTimeout(async () => {
-        if (fallbackRendered) return;
-
-        const anyFilled = slots.some((slot) => {
-          const ins = slot.querySelector("ins.adsbygoogle");
-          if (!ins) return false;
-
-          // Explicit unfilled signal from AdSense should always trigger fallback.
-          const adStatus = (ins.getAttribute("data-ad-status") || "").toLowerCase();
-          if (adStatus === "unfilled") return false;
-
-          const status = ins.getAttribute("data-adsbygoogle-status") || "";
-          // Treat only "done" as filled; others can be "unfilled"
-          if (status) return status === "done";
-
-          // Heuristic: if it gained height, it's probably filled
-          return ins.offsetHeight >= 50;
-        });
-
-        if (!anyFilled) {
-          const ads = await loadFeed();
-          renderFallback(ads);
-          fallbackRendered = true;
-        }
-      }, 1500);
-    } catch {
-      // If AdSense cannot load, use internal fallback ad feed.
-      const ads = await loadFeed();
-      renderFallback(ads);
-      fallbackRendered = true;
-    }
+    const ads = await loadFeed();
+    renderFallback(ads, { hideAdsenseIns: true });
+    fallbackRendered = true;
   }
 
   // Initial render using current consent snapshot.
