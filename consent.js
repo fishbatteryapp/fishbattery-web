@@ -55,7 +55,7 @@
         <h2 class="consent-banner-title">We use cookies</h2>
         <p>
           We use essential cookies to keep the site working.
-          With your permission, we also use advertising cookies to show sponsored content.
+          With your permission, we also use advertising cookies to measure sponsored content performance (impressions and clicks).
         </p>
       </div>
       <div class="consent-banner-actions">

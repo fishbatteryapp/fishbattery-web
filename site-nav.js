@@ -5,7 +5,7 @@
   // Responsibilities:
   // - Restore session from token (if present).
   // - Render logged-out CTA or logged-in account pill + logout.
-  // - Toggle sponsored sections by subscription status and consent state.
+  // - Toggle sponsored sections by subscription status.
 
   function applyPerformanceMode() {
     const root = document.documentElement;
@@ -100,16 +100,10 @@
     return tier === "premium" || tier === "founder";
   }
 
-  // Show/hide sponsored slots based on account status and consent.
+  // Show/hide sponsored slots based on account status only.
   function setSponsoredVisibility(showSponsored) {
-    const consentApi = window.fishbatteryConsent;
-    // If consent API is unavailable, default to true to avoid hiding unexpectedly.
-    const hasConsent =
-      !consentApi || typeof consentApi.hasAdConsent !== "function"
-        ? true
-        : !!consentApi.hasAdConsent();
     for (const el of document.querySelectorAll(".sponsored-slot")) {
-      el.classList.toggle("hidden", !(showSponsored && hasConsent));
+      el.classList.toggle("hidden", !showSponsored);
     }
   }
 

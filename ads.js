@@ -1,13 +1,11 @@
 ﻿(function initSponsoredAds() {
   // Purpose:
-  // Render sponsored slots in a consent-aware way.
+  // Render sponsored slots from internal API while keeping tracking consent-aware.
   //
   // Flow:
   // 1) If no ad slots exist on page, exit.
-  // 2) Wait for consent state.
-  // 3) If consented:
-  //    - In test mode: render fallback feed
-  //    - Otherwise: try AdSense; if no-fill/fail -> fallback feed
+  // 2) Render sponsored slots from API.
+  // 3) Only send impression/click events when optional ad consent is granted.
 
   // All supported ad placeholders on the current page.
   const slots = Array.from(document.querySelectorAll(".sponsored-slot[data-ad-placement]"));
@@ -37,6 +35,15 @@
   const EVENT_BATCH_MAX = 20;
   let eventQueue = [];
   let flushTimer = null;
+  function getConsentApi() {
+    return window.fishbatteryConsent;
+  }
+
+  function hasTrackingConsent() {
+    const consentApi = getConsentApi();
+    if (!consentApi || typeof consentApi.hasAdConsent !== "function") return false;
+    return !!consentApi.hasAdConsent();
+  }
 
   function getApiBases() {
     const resolved = (localStorage.getItem("fishbattery.apiBaseResolved") || "").trim();
@@ -103,6 +110,10 @@
     const payload = buildAdEventPayload(eventType, campaignId, placement);
     if (!payload.campaignId || !payload.placement) return;
     eventQueue.push(payload);
+    if (eventType === "click") {
+      void flushAdEvents();
+      return;
+    }
     if (eventQueue.length >= EVENT_BATCH_MAX) {
       void flushAdEvents();
       return;
@@ -130,6 +141,8 @@
   }
 
   async function postAdEvent(eventType, campaignId, placement) {
+    // Sponsored content can render without optional consent, but tracking is consent-gated.
+    if (!hasTrackingConsent()) return;
     queueAdEvent(eventType, campaignId, placement);
   }
 
@@ -402,7 +415,7 @@
   }
 
   // Single render entry for consent state transitions.
-  async function renderForConsentState(consented) {
+  async function renderForConsentState(_consented) {
     // reset per-run state
     fallbackRendered = false;
     if (fallbackTimer) {
@@ -410,13 +423,7 @@
       fallbackTimer = null;
     }
 
-    if (!consented) {
-      // No optional ad consent: hard-hide all sponsored slots.
-      for (const slot of slots) slot.classList.add("hidden");
-      return;
-    }
-
-    // Optional ad consent granted: reveal slots and attempt rendering.
+    // Sponsored slots are always allowed to render. Consent only controls event tracking.
     for (const slot of slots) slot.classList.remove("hidden");
 
     // TEST MODE: bypass AdSense entirely so you can test UI without authorization
@@ -433,9 +440,11 @@
   }
 
   // Initial render using current consent snapshot.
-  const consentApi = window.fishbatteryConsent;
-  if (consentApi && typeof consentApi.hasAdConsent === "function") {
-    void renderForConsentState(consentApi.hasAdConsent());
+  const initialConsentApi = getConsentApi();
+  if (initialConsentApi && typeof initialConsentApi.hasAdConsent === "function") {
+    void renderForConsentState(initialConsentApi.hasAdConsent());
+  } else {
+    void renderForConsentState(false);
   }
 
   // Live updates whenever user accepts/rejects through the consent banner.
