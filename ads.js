@@ -227,10 +227,6 @@
   
           <div class="sponsored-fallback-title"></div>
           <div class="sponsored-fallback-body"></div>
-  
-          <div class="sponsored-fallback-actions">
-            <a class="btn sponsored-fallback-cta" href="#" target="_blank" rel="noreferrer">Learn more</a>
-          </div>
         </div>
       `;
   
@@ -243,25 +239,38 @@
     const mediaEl = wrap.querySelector(".sponsored-fallback-media");
     const titleEl = wrap.querySelector(".sponsored-fallback-title");
     const bodyEl = wrap.querySelector(".sponsored-fallback-body");
-    const ctaEl = wrap.querySelector(".sponsored-fallback-cta");
     const imageEl = wrap.querySelector(".sponsored-fallback-image");
     const kickerEl = slot.querySelector(".sponsored-kicker");
   
-    if (mediaEl) mediaEl.textContent = ad.media ? `- ${ad.media}` : "";
+    if (mediaEl) mediaEl.textContent = ad.media ? `• ${ad.media}` : "";
     if (titleEl) titleEl.textContent = ad.title;
     if (bodyEl) bodyEl.textContent = ad.body;
-    if (ctaEl) {
-      ctaEl.textContent = ad.cta || "Learn more";
-      ctaEl.href = ad.link;
-      if (!ctaEl.dataset.adTracked) {
-        ctaEl.dataset.adTracked = "1";
-        ctaEl.addEventListener("click", () => {
-          const placement = String(slot.getAttribute("data-ad-placement") || "").trim().toLowerCase();
-          void postAdEvent("click", ad.id || campaignIdFromPlacement(placement), placement);
-        });
-      }
+    wrap.style.cursor = "pointer";
+    wrap.setAttribute("role", "link");
+    wrap.setAttribute("tabindex", "0");
+    wrap.dataset.adLink = ad.link;
+    wrap.dataset.adId = ad.id || campaignIdFromPlacement(String(slot.getAttribute("data-ad-placement") || "").trim().toLowerCase());
+    wrap.dataset.adPlacement = String(slot.getAttribute("data-ad-placement") || "").trim().toLowerCase();
+    if (!wrap.dataset.adTracked) {
+      wrap.dataset.adTracked = "1";
+      wrap.addEventListener("click", () => {
+        const placement = String(wrap.dataset.adPlacement || "").trim().toLowerCase();
+        const campaignId = String(wrap.dataset.adId || campaignIdFromPlacement(placement));
+        const target = String(wrap.dataset.adLink || "").trim();
+        void postAdEvent("click", campaignId, placement);
+        if (target) window.open(target, "_blank", "noopener,noreferrer");
+      });
+      wrap.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        const placement = String(wrap.dataset.adPlacement || "").trim().toLowerCase();
+        const campaignId = String(wrap.dataset.adId || campaignIdFromPlacement(placement));
+        const target = String(wrap.dataset.adLink || "").trim();
+        void postAdEvent("click", campaignId, placement);
+        if (target) window.open(target, "_blank", "noopener,noreferrer");
+      });
     }
-    if (kickerEl) kickerEl.textContent = ad.media ? `Sponsored - ${ad.media}` : "Sponsored";
+    if (kickerEl) kickerEl.textContent = ad.media ? `Sponsored • ${ad.media}` : "Sponsored";
     if (imageEl) {
       if (/^https?:\/\//i.test(ad.imageUrl || "")) {
         imageEl.style.backgroundImage =
