@@ -381,28 +381,79 @@
   }
 
   function toCsv(rows) {
-    const head = [
-      "campaign_id",
-      "campaign_name",
-      "placement",
-      "status",
-      "pricing_model",
-      "impressions",
-      "clicks",
-      "ctr_percent",
-      "conversions",
-      "conversion_rate_percent",
-      "avg_cpc_eur",
-      "estimated_revenue_eur"
-    ];
-    const lines = [head];
+    const sep = ";";
+    const account = (() => {
+      try {
+        const raw = JSON.parse(localStorage.getItem("fishbattery.account") || "null");
+        return String(raw?.displayName || raw?.email || "").trim() || "Unknown";
+      } catch {
+        return "Unknown";
+      }
+    })();
+    const now = new Date();
+    const generatedAt = now.toISOString();
+    const rangeLabelMap = {
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days"
+    };
+    const rangeValue = String(rangeSelect?.value || "30d");
+    const placementValue = placementLabel(placementSelect?.value || "all");
+    const statusValue = String(statusSelect?.value || "all");
+    const totals = rows.reduce(
+      (acc, row) => {
+        acc.impressions += asFiniteNumber(row?.impressions, 0);
+        acc.clicks += asFiniteNumber(row?.clicks, 0);
+        acc.conversions += asFiniteNumber(row?.conversions, 0);
+        acc.revenueEur += asFiniteNumber(row?.revenueEur, 0);
+        return acc;
+      },
+      { impressions: 0, clicks: 0, conversions: 0, revenueEur: 0 }
+    );
+    const ctr = totals.impressions > 0 ? (totals.clicks / totals.impressions) * 100 : 0;
+    const conversionRate = totals.clicks > 0 ? (totals.conversions / totals.clicks) * 100 : 0;
+    const avgCpc = totals.clicks > 0 ? totals.revenueEur / totals.clicks : 0;
+
+    const out = [];
+    out.push(`sep=${sep}`);
+    out.push(`"${"Fishbattery Ad Performance Report"}"`);
+    out.push("");
+    out.push(["Report generated (UTC)", generatedAt]);
+    out.push(["Account", account]);
+    out.push(["Time range", rangeLabelMap[rangeValue] || rangeValue]);
+    out.push(["Placement filter", placementValue === "all" ? "All placements" : placementValue]);
+    out.push(["Status filter", statusValue === "all" ? "All statuses" : statusValue]);
+    out.push("");
+    out.push(["Summary metric", "Value"]);
+    out.push(["Impressions", String(totals.impressions)]);
+    out.push(["Clicks", String(totals.clicks)]);
+    out.push(["CTR (%)", ctr.toFixed(2)]);
+    out.push(["Conversions", String(totals.conversions)]);
+    out.push(["Conversion rate (%)", conversionRate.toFixed(2)]);
+    out.push(["Average CPC (EUR)", avgCpc.toFixed(2)]);
+    out.push(["Estimated revenue (EUR)", totals.revenueEur.toFixed(2)]);
+    out.push("");
+    out.push([
+      "Campaign ID",
+      "Campaign name",
+      "Placements",
+      "Status",
+      "Pricing model",
+      "Impressions",
+      "Clicks",
+      "CTR (%)",
+      "Conversions",
+      "Conversion rate (%)",
+      "Average CPC (EUR)",
+      "Estimated revenue (EUR)"
+    ]);
     for (const row of rows) {
-      lines.push([
+      out.push([
         String(row?.campaignId || ""),
         String(row?.campaignName || ""),
-        String((Array.isArray(row?.placements) ? row.placements : []).join("|")),
+        String((Array.isArray(row?.placements) ? row.placements : []).join(" | ")),
         String(row?.status || ""),
-        String(row?.pricingModel || "mixed"),
+        String(row?.pricingModel || "mixed").toUpperCase(),
         String(Number(row?.impressions || 0)),
         String(Number(row?.clicks || 0)),
         Number(row?.ctr || 0).toFixed(2),
@@ -412,17 +463,22 @@
         String(Number(row?.revenueEur || 0).toFixed(2))
       ]);
     }
-    return lines
-      .map((cols) => cols.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
+    return out
+      .map((cols) => {
+        if (!Array.isArray(cols)) return String(cols);
+        return cols.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(sep);
+      })
+      .join("\r\n");
   }
 
   function downloadCsv(content) {
-    const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
+    const withBom = `\uFEFF${content}`;
+    const blob = new Blob([withBom], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `fishbattery-ads-${Date.now()}.csv`;
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    link.download = `fishbattery-ad-report-${stamp}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
