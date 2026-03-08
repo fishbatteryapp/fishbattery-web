@@ -1,7 +1,17 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-14T00:00:00Z",
+  "updatedAt": "2026-03-08T21:10:00Z",
   "ads": [
+    {
+      "id": "sparked-host",
+      "active": true,
+      "placements": ["launcher-sidebar", "website-download-main", "website-home-main"],
+      "title": "Sponsored: Sparked Host",
+      "body": "Fast Minecraft hosting with quick setup and reliable performance for modded servers.",
+      "cta": "Get started",
+      "media": "Sparked Host",
+      "link": "https://billing.sparkedhost.com/aff.php?aff=3171"
+    },
     {
       "id": "your-ad-here",
       "active": true,
