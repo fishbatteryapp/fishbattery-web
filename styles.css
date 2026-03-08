@@ -33,11 +33,13 @@ body {
 .bg {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
+  pointer-events: none;
   background:
-    radial-gradient(900px 500px at 100% -10%, rgba(49, 144, 212, 0.32), transparent 70%),
-    radial-gradient(800px 500px at -10% 0%, rgba(35, 110, 180, 0.22), transparent 70%),
-    linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    radial-gradient(900px 500px at 100% -10%, rgba(49, 144, 212, 0.18), transparent 70%),
+    radial-gradient(800px 500px at -10% 0%, rgba(35, 110, 180, 0.12), transparent 70%),
+    linear-gradient(180deg, rgba(6, 20, 38, 0.44), rgba(4, 11, 24, 0.56)),
+    url("./assets/ali-abdul-rahman-Xva-TYqwHhA-unsplash.jpg") center center / cover no-repeat fixed;
 }
 
 /* Page/container primitives */
@@ -49,6 +51,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .page.narrow {
@@ -471,6 +475,14 @@ h2 {
   content: "|";
   margin-right: 0.7rem;
   color: rgba(158, 194, 221, 0.35);
+}
+
+.photo-credit a {
+  color: inherit;
+}
+
+.photo-credit a:hover {
+  color: var(--text);
 }
 
 .legal-links {
@@ -1405,10 +1417,17 @@ input[type="file"]::-webkit-file-upload-button:hover {
 
 .download-page .bg {
   background:
-    radial-gradient(920px 560px at 50% -15%, rgba(38, 122, 198, 0.44), transparent 68%),
-    radial-gradient(760px 420px at 100% 20%, rgba(26, 83, 145, 0.28), transparent 72%),
-    radial-gradient(760px 420px at 0% 22%, rgba(17, 69, 127, 0.26), transparent 72%),
-    linear-gradient(180deg, #06142b, #040b18);
+    radial-gradient(920px 560px at 50% -15%, rgba(38, 122, 198, 0.26), transparent 68%),
+    radial-gradient(760px 420px at 100% 20%, rgba(26, 83, 145, 0.18), transparent 72%),
+    radial-gradient(760px 420px at 0% 22%, rgba(17, 69, 127, 0.16), transparent 72%),
+    linear-gradient(180deg, rgba(6, 20, 43, 0.42), rgba(4, 11, 24, 0.56)),
+    url("./assets/ali-abdul-rahman-Xva-TYqwHhA-unsplash.jpg") center center / cover no-repeat fixed;
+}
+
+.download-page .page {
+  max-width: 1180px;
+  margin: 0 auto;
+  gap: 1.15rem;
 }
 
 .download-hero {
@@ -1957,9 +1976,10 @@ input[type="file"]::-webkit-file-upload-button:hover {
 
 .ads-page .bg {
   background:
-    radial-gradient(900px 520px at 60% -18%, rgba(47, 137, 206, 0.4), transparent 70%),
-    radial-gradient(780px 440px at 0% 26%, rgba(17, 71, 134, 0.28), transparent 72%),
-    linear-gradient(180deg, #06172d, #041020);
+    radial-gradient(900px 520px at 60% -18%, rgba(47, 137, 206, 0.24), transparent 70%),
+    radial-gradient(780px 440px at 0% 26%, rgba(17, 71, 134, 0.16), transparent 72%),
+    linear-gradient(180deg, rgba(6, 23, 45, 0.42), rgba(4, 16, 32, 0.56)),
+    url("./assets/ali-abdul-rahman-Xva-TYqwHhA-unsplash.jpg") center center / cover no-repeat fixed;
 }
 
 .ads-hero {

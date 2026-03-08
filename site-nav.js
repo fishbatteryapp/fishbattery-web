@@ -7,6 +7,18 @@
   // - Render logged-out CTA or logged-in account pill + logout.
   // - Toggle sponsored sections by subscription status and consent state.
 
+  function ensurePhotoCredit() {
+    const legalCopy = document.querySelector(".legal-footer .legal-copy");
+    if (!legalCopy || legalCopy.querySelector(".photo-credit")) return;
+    const credit = document.createElement("span");
+    credit.className = "photo-credit";
+    credit.innerHTML =
+      'Photo by <a href="https://unsplash.com/@_actually_?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText" target="_blank" rel="noreferrer">Ali Abdul Rahman</a> on <a href="https://unsplash.com/photos/blue-body-of-water-during-daytime-Xva-TYqwHhA?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText" target="_blank" rel="noreferrer">Unsplash</a>';
+    legalCopy.appendChild(credit);
+  }
+
+  ensurePhotoCredit();
+
   // All pages that use this script provide an auth action container.
   const container = document.getElementById("authActions");
   if (!container) return;
