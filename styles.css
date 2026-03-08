@@ -2156,7 +2156,7 @@ input[type="file"]::-webkit-file-upload-button:hover {
 .dashboard-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1500px;
+  min-width: 1100px;
 }
 
 .campaign-select {
@@ -2243,6 +2243,27 @@ input[type="file"]::-webkit-file-upload-button:hover {
 
 .dashboard-table tr:last-child td {
   border-bottom: 0;
+}
+
+.ads-budget-topup {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.ads-budget-topup > label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.ads-budget-topup > input {
+  max-width: 220px;
+}
+
+.ads-budget-topup-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .status-pill {
