@@ -210,17 +210,12 @@
     return { id, title, body, cta, link, media, imageUrl, placements };
   }
 
-  // Pick one ad for a given placement, rotating deterministically via localStorage cursor.
+  // Pick one ad for a given placement.
   function pickAdForPlacement(ads, placement) {
     const matching = ads.filter((ad) => ad.placements.includes(placement));
     if (!matching.length) return null;
-
-    const key = `fishbattery.ad.index.${placement}`;
-    const cursor = Number(localStorage.getItem(key) || 0);
-    const idx = Number.isFinite(cursor) ? Math.abs(cursor) % matching.length : 0;
-    localStorage.setItem(key, String(idx + 1));
-
-    return matching[idx];
+    // Feed is already weighted server-side; prefer top returned candidate.
+    return matching[0];
   }
 
   // Ensure fallback markup exists, then apply ad content.
@@ -380,7 +375,7 @@
     for (const base of getApiBases()) {
       try {
         const response = await fetchJsonWithTimeout(
-          `${base}/v1/ads/feed?placement=${encodeURIComponent(placement)}&limit=5`,
+          `${base}/v1/ads/feed?placement=${encodeURIComponent(placement)}&limit=5&sessionId=${encodeURIComponent(getSessionId())}`,
           FEED_TIMEOUT_MS,
           { cache: "no-store" }
         );
