@@ -40,6 +40,10 @@
   const exportDataBtn = document.getElementById("exportDataBtn");
   const deleteAccountBtn = document.getElementById("deleteAccountBtn");
   const privacyStatusText = document.getElementById("privacyStatusText");
+  const discordSummary = document.getElementById("discordSummary");
+  const discordLinkBtn = document.getElementById("discordLinkBtn");
+  const discordUnlinkBtn = document.getElementById("discordUnlinkBtn");
+  const discordStatusText = document.getElementById("discordStatusText");
 
   // API base strategy:
   // - Use production endpoint by default.
@@ -51,6 +55,7 @@
   const API_BASES = isLocalDev
     ? [PUBLIC_API_BASE, "http://localhost:3000"]
     : [PUBLIC_API_BASE];
+  const DISCORD_REDIRECT_URI = `${window.location.origin}/discord-link.html`;
 
   let authToken = (localStorage.getItem("fishbattery.token") || "").trim();
   if (!authToken) {
@@ -95,6 +100,67 @@
   let clearAvatar = false;
   let canChangePassword = false;
   let twoFactorEnabled = false;
+
+  function setDiscordStatus(message) {
+    if (discordStatusText) discordStatusText.textContent = String(message || "");
+  }
+
+  async function refreshDiscordLinkStatus() {
+    try {
+      const status = await request("/v1/account/discord", {
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+      const linked = !!status?.linked;
+      const username = String(status?.username || "").trim();
+      if (discordSummary) {
+        discordSummary.textContent = linked
+          ? `Linked to Discord as ${username || "your account"}.`
+          : "No Discord account linked yet.";
+      }
+      if (discordLinkBtn) discordLinkBtn.classList.toggle("hidden", linked);
+      if (discordUnlinkBtn) discordUnlinkBtn.classList.toggle("hidden", !linked);
+      if (!status?.oauthConfigured) {
+        setDiscordStatus("Discord linking is not configured on the server yet.");
+        if (discordLinkBtn) discordLinkBtn.setAttribute("disabled", "disabled");
+        return;
+      }
+      if (discordLinkBtn) discordLinkBtn.removeAttribute("disabled");
+      if (linked) {
+        setDiscordStatus(
+          status?.roleSyncConfigured
+            ? "Premium roles will be synced automatically when your subscription changes."
+            : "Discord is linked, but automatic role sync is not configured on the server."
+        );
+      } else {
+        setDiscordStatus("Link your Discord account so Fishbattery can sync your Premium Users role automatically.");
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (discordSummary) discordSummary.textContent = "Could not load Discord link status right now.";
+      setDiscordStatus(message || "Could not load Discord link status right now.");
+    }
+  }
+
+  function applyDiscordCallbackResult() {
+    const query = new URLSearchParams(window.location.search);
+    const linked = String(query.get("discord") || "").trim();
+    const error = String(query.get("discord_error") || "").trim();
+    const detail = String(query.get("detail") || "").trim();
+    if (linked === "linked") {
+      setDiscordStatus(detail || "Discord linked successfully.");
+    } else if (linked === "unlinked") {
+      setDiscordStatus(detail || "Discord unlinked.");
+    } else if (error) {
+      setDiscordStatus(detail || "Could not complete Discord linking.");
+    } else {
+      return;
+    }
+    query.delete("discord");
+    query.delete("discord_error");
+    query.delete("detail");
+    const nextUrl = `${window.location.pathname}${query.toString() ? `?${query.toString()}` : ""}`;
+    window.history.replaceState({}, "", nextUrl);
+  }
 
   // Password visibility icon assets.
   const eyeOpenSvg =
@@ -373,6 +439,7 @@
       await refreshTwofaStatus();
     }
     localStorage.setItem("fishbattery.account", JSON.stringify(account));
+    await refreshDiscordLinkStatus();
     setStatus("You are signed in.");
   }
 
@@ -706,6 +773,52 @@
     });
   }
 
+  if (discordLinkBtn) {
+    discordLinkBtn.addEventListener("click", async () => {
+      try {
+        setDiscordStatus("Opening Discord linking flow...");
+        const start = await request("/v1/account/discord/link/start", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ redirectUri: DISCORD_REDIRECT_URI })
+        });
+        if (!start?.authUrl) {
+          throw new Error("Could not start Discord linking");
+        }
+        window.location.href = String(start.authUrl);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        setDiscordStatus(message || "Could not start Discord linking right now.");
+      }
+    });
+  }
+
+  if (discordUnlinkBtn) {
+    discordUnlinkBtn.addEventListener("click", async () => {
+      const confirmed = window.confirm("Unlink your Discord account from Fishbattery?");
+      if (!confirmed) return;
+      try {
+        setDiscordStatus("Unlinking Discord...");
+        await request("/v1/account/discord/unlink", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`
+          },
+          body: JSON.stringify({})
+        });
+        setDiscordStatus("Discord unlinked.");
+        await refreshDiscordLinkStatus();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        setDiscordStatus(message || "Could not unlink Discord right now.");
+      }
+    });
+  }
+
   if (deleteAccountBtn) {
     deleteAccountBtn.addEventListener("click", async () => {
       const acknowledged = window.confirm(
@@ -751,6 +864,8 @@
       }
     });
   }
+
+  applyDiscordCallbackResult();
 
   loadSession().catch((error) => {
     if (isAuthInvalidError(error)) {
