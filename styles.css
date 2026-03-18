@@ -287,7 +287,25 @@ h2 {
 }
 
 .checkbox-row input {
+  width: auto;
+  flex: 0 0 auto;
   margin-top: 0.2rem;
+}
+
+.checkbox-row span {
+  color: var(--text);
+}
+
+.checkbox-row a {
+  color: var(--accent-2);
+}
+
+.legal-checkbox-note {
+  border: 1px solid rgba(89, 168, 219, 0.22);
+  border-radius: 12px;
+  background: rgba(8, 21, 35, 0.5);
+  padding: 0.85rem 0.95rem;
+  color: var(--text);
 }
 
 .list-stack {
