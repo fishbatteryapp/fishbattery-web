@@ -269,12 +269,60 @@
         <td>
           ${item.status === "paid"
             ? `<span class="hint">Paid</span>`
-            : item.status === "reversed"
-              ? `<span class="hint">Reversed</span>`
-              : `<button class="btn" type="button" data-reverse-conversion="${escapeHtml(item.id)}">Reverse</button>`}
+            : `
+              <div class="actions">
+                ${item.status === "approved"
+                  ? `<button class="btn" type="button" data-pending-conversion="${escapeHtml(item.id)}">Pending</button>`
+                  : `<button class="btn" type="button" data-approve-conversion="${escapeHtml(item.id)}">Approve</button>`}
+                <button class="btn" type="button" data-reverse-conversion="${escapeHtml(item.id)}">Reverse</button>
+              </div>`}
         </td>
       </tr>
     `).join("");
+
+    for (const button of affiliateConversionRows.querySelectorAll("[data-approve-conversion]")) {
+      button.addEventListener("click", async () => {
+        const conversionId = String(button.getAttribute("data-approve-conversion") || "");
+        try {
+          setNotice("Approving conversion...");
+          const data = await request(`/v1/admin/affiliates/conversions/${encodeURIComponent(conversionId)}/approve`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({})
+          });
+          currentAffiliates = Array.isArray(data?.affiliates) ? data.affiliates : currentAffiliates;
+          currentConversions = Array.isArray(data?.conversions) ? data.conversions : currentConversions;
+          renderKpis();
+          renderAffiliates();
+          renderConversions();
+          setNotice(String(data?.message || "Conversion approved."));
+        } catch (error) {
+          setNotice(`Could not approve conversion: ${String(error?.message || error)}`);
+        }
+      });
+    }
+
+    for (const button of affiliateConversionRows.querySelectorAll("[data-pending-conversion]")) {
+      button.addEventListener("click", async () => {
+        const conversionId = String(button.getAttribute("data-pending-conversion") || "");
+        try {
+          setNotice("Moving conversion to pending...");
+          const data = await request(`/v1/admin/affiliates/conversions/${encodeURIComponent(conversionId)}/pending`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({})
+          });
+          currentAffiliates = Array.isArray(data?.affiliates) ? data.affiliates : currentAffiliates;
+          currentConversions = Array.isArray(data?.conversions) ? data.conversions : currentConversions;
+          renderKpis();
+          renderAffiliates();
+          renderConversions();
+          setNotice(String(data?.message || "Conversion moved to pending."));
+        } catch (error) {
+          setNotice(`Could not move conversion to pending: ${String(error?.message || error)}`);
+        }
+      });
+    }
 
     for (const button of affiliateConversionRows.querySelectorAll("[data-reverse-conversion]")) {
       button.addEventListener("click", async () => {
