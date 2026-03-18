@@ -11,6 +11,7 @@
   const adminNotice = document.getElementById("adminNotice");
   const affiliateAdminRows = document.getElementById("affiliateAdminRows");
   const affiliatePayoutRows = document.getElementById("affiliatePayoutRows");
+  const affiliateConversionRows = document.getElementById("affiliateConversionRows");
   const adminKpiAffiliates = document.getElementById("adminKpiAffiliates");
   const adminKpiReady = document.getElementById("adminKpiReady");
   const adminKpiApproved = document.getElementById("adminKpiApproved");
@@ -18,6 +19,7 @@
 
   let currentAffiliates = [];
   let currentPayouts = [];
+  let currentConversions = [];
 
   function getApiBases() {
     const resolved = (localStorage.getItem("fishbattery.apiBaseResolved") || "").trim();
@@ -249,6 +251,55 @@
     `).join("");
   }
 
+  function renderConversions() {
+    if (!currentConversions.length) {
+      affiliateConversionRows.innerHTML = `<tr><td colspan="9">No conversions recorded yet.</td></tr>`;
+      return;
+    }
+    affiliateConversionRows.innerHTML = currentConversions.map((item) => `
+      <tr>
+        <td><strong>${escapeHtml(item.affiliateDisplayName || "Unknown")}</strong><br /><span>${escapeHtml(item.referralCode || "")}</span></td>
+        <td>${escapeHtml(item.referredDisplayName || item.referredEmail || item.referredUserId || "-")}</td>
+        <td>${escapeHtml(String(item.plan || "premium").toUpperCase())}</td>
+        <td><span class="status-pill status-${escapeHtml(item.status || "pending")}">${escapeHtml(item.status || "pending")}</span></td>
+        <td>${escapeHtml(formatUsdFromCents(item.commissionCents || 0))}</td>
+        <td>${escapeHtml(formatDate(item.convertedAt))}</td>
+        <td>${escapeHtml(formatDate(item.availableAt))}</td>
+        <td>${escapeHtml(item.notes || "-")}</td>
+        <td>
+          ${item.status === "paid"
+            ? `<span class="hint">Paid</span>`
+            : item.status === "reversed"
+              ? `<span class="hint">Reversed</span>`
+              : `<button class="btn" type="button" data-reverse-conversion="${escapeHtml(item.id)}">Reverse</button>`}
+        </td>
+      </tr>
+    `).join("");
+
+    for (const button of affiliateConversionRows.querySelectorAll("[data-reverse-conversion]")) {
+      button.addEventListener("click", async () => {
+        const conversionId = String(button.getAttribute("data-reverse-conversion") || "");
+        const note = window.prompt("Reason for reversal", "Duplicate test conversion") || "";
+        try {
+          setNotice("Reversing conversion...");
+          const data = await request(`/v1/admin/affiliates/conversions/${encodeURIComponent(conversionId)}/reverse`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ note })
+          });
+          currentAffiliates = Array.isArray(data?.affiliates) ? data.affiliates : currentAffiliates;
+          currentConversions = Array.isArray(data?.conversions) ? data.conversions : currentConversions;
+          renderKpis();
+          renderAffiliates();
+          renderConversions();
+          setNotice(String(data?.message || "Conversion reversed."));
+        } catch (error) {
+          setNotice(`Could not reverse conversion: ${String(error?.message || error)}`);
+        }
+      });
+    }
+  }
+
   function toCsv() {
     const rows = [["Affiliate", "Email", "Status", "Code", "Clicks", "Conversions", "Ready USD", "Approved USD", "Paid USD", "Payout Method"]];
     for (const item of currentAffiliates) {
@@ -286,14 +337,17 @@
       const data = await request("/v1/admin/affiliates/overview");
       currentAffiliates = Array.isArray(data?.affiliates) ? data.affiliates : [];
       currentPayouts = Array.isArray(data?.payouts) ? data.payouts : [];
+      currentConversions = Array.isArray(data?.conversions) ? data.conversions : [];
       renderKpis();
       renderAffiliates();
       renderPayouts();
+      renderConversions();
       setNotice("Affiliate admin data loaded.");
     } catch (error) {
       setNotice(`Could not load affiliate admin data: ${String(error?.message || error)}`);
       affiliateAdminRows.innerHTML = `<tr><td colspan="10">Enter a valid admin key to load affiliate data.</td></tr>`;
       affiliatePayoutRows.innerHTML = `<tr><td colspan="7">No payout data loaded.</td></tr>`;
+      affiliateConversionRows.innerHTML = `<tr><td colspan="9">No conversion data loaded.</td></tr>`;
     }
   }
 
@@ -326,5 +380,6 @@
   } else {
     affiliateAdminRows.innerHTML = `<tr><td colspan="10">Save your admin key above to start.</td></tr>`;
     affiliatePayoutRows.innerHTML = `<tr><td colspan="7">Save your admin key above to load payout history.</td></tr>`;
+    affiliateConversionRows.innerHTML = `<tr><td colspan="9">Save your admin key above to load conversion history.</td></tr>`;
   }
 })();
