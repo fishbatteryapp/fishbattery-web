@@ -56,6 +56,17 @@
     localStorage.setItem("fishbattery.token", value);
   }
 
+  function getAffiliateReferralCode() {
+    try {
+      const raw = localStorage.getItem("fishbattery.affiliateReferral") || "";
+      if (!raw) return "";
+      const parsed = JSON.parse(raw);
+      return String(parsed?.code || "").trim().toUpperCase();
+    } catch {
+      return "";
+    }
+  }
+
   async function parseResponse(response) {
     // Handles JSON and plain text API responses.
     const text = await response.text();
@@ -157,6 +168,7 @@
     }
     write("Opening secure checkout...");
     const urls = buildCheckoutUrls();
+    const referralCode = getAffiliateReferralCode();
     const data = await request("/v1/billing/checkout-session", {
       method: "POST",
       headers: {
@@ -166,7 +178,8 @@
       body: JSON.stringify({
         plan,
         successUrl: urls.successUrl,
-        cancelUrl: urls.cancelUrl
+        cancelUrl: urls.cancelUrl,
+        referralCode
       })
     });
     if (data && data.url) window.location.href = data.url;
@@ -278,6 +291,11 @@
     } catch {
       // ignore invalid cache
     }
+  }
+
+  const referralCode = getAffiliateReferralCode();
+  if (referralCode) {
+    write(`Affiliate referral ${referralCode} will be attached automatically at checkout.`);
   }
 
   checkSession().catch((error) => {

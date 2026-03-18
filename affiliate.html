@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="icon" type="image/x-icon" href="/assets/Logo transparent.png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Affiliate Dashboard - Fishbattery</title>
+    <meta name="description" content="Apply to the Fishbattery affiliate program and manage your referral link, payouts, and analytics." />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="canonical" href="https://fishbattery.app/affiliate.html" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <main class="page narrow">
+      <header class="topbar card">
+        <div class="top-left">
+          <a class="brand" href="./index.html">Fishbattery</a>
+          <nav class="top-links">
+            <a href="./download.html">Download</a>
+            <a href="./account.html">Account</a>
+            <a href="https://discord.gg/yT5zRsRXsf" target="_blank" rel="noreferrer">Discord</a>
+          </nav>
+        </div>
+        <div id="authActions" class="actions"></div>
+      </header>
+
+      <header class="card">
+        <p class="kicker">Affiliate program</p>
+        <h1>Grow Fishbattery and earn per premium signup</h1>
+        <p class="lead">Apply, accept the program terms, then manage your referral link, payout preferences, and tracked conversions from one place.</p>
+      </header>
+
+      <section class="card stack">
+        <h2>Program overview</h2>
+        <p id="programSummary" class="hint">Loading affiliate program details...</p>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span>Commission</span>
+            <strong id="programCommission">-</strong>
+          </div>
+          <div class="stat-card">
+            <span>Payout threshold</span>
+            <strong id="programThreshold">-</strong>
+          </div>
+          <div class="stat-card">
+            <span>Review hold</span>
+            <strong id="programHold">-</strong>
+          </div>
+        </div>
+        <div class="actions">
+          <a class="btn" href="./affiliate-terms.html">Read affiliate terms</a>
+          <a class="btn" href="./account.html">Back to account</a>
+        </div>
+      </section>
+
+      <section class="card stack">
+        <h2>Your affiliate status</h2>
+        <p id="affiliateStatusSummary" class="hint">Checking your affiliate status...</p>
+        <p id="affiliateStatusDetail" class="hint"></p>
+      </section>
+
+      <section id="approvedDashboard" class="card stack hidden">
+        <h2>Your link</h2>
+        <label class="field">
+          <span>Referral URL</span>
+          <input id="referralUrl" class="mono-input" type="text" readonly />
+        </label>
+        <div class="actions">
+          <button id="copyReferralUrl" class="btn btn-primary" type="button">Copy link</button>
+        </div>
+        <p id="copyStatusText" class="hint">Share your link on approved channels only.</p>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span>Clicks</span>
+            <strong id="statClicks">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>Unique clicks</span>
+            <strong id="statUniqueClicks">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>Conversions</span>
+            <strong id="statConversions">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>Pending earnings</span>
+            <strong id="statPending">USD $0.00</strong>
+          </div>
+          <div class="stat-card">
+            <span>Ready after hold</span>
+            <strong id="statReady">USD $0.00</strong>
+          </div>
+          <div class="stat-card">
+            <span>Paid out</span>
+            <strong id="statPaid">USD $0.00</strong>
+          </div>
+        </div>
+      </section>
+
+      <section id="payoutSection" class="card stack hidden">
+        <h2>Payout settings</h2>
+        <p class="hint">Save the payout details Fishbattery should use once your verified balance reaches the threshold.</p>
+        <label class="field">
+          <span>Payout method</span>
+          <select id="payoutMethod">
+            <option value="">Choose payout method</option>
+            <option value="paypal">PayPal</option>
+            <option value="stripe_connect">Stripe Connect</option>
+            <option value="bank_transfer">Bank transfer</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Contact name</span>
+          <input id="payoutContactName" type="text" maxlength="120" placeholder="Name for payout verification" />
+        </label>
+        <label class="field">
+          <span>PayPal email</span>
+          <input id="payoutPaypalEmail" type="email" maxlength="200" placeholder="name@example.com" />
+        </label>
+        <label class="field">
+          <span>Stripe email</span>
+          <input id="payoutStripeEmail" type="email" maxlength="200" placeholder="name@example.com" />
+        </label>
+        <label class="field">
+          <span>Bank account name</span>
+          <input id="payoutBankAccountName" type="text" maxlength="120" placeholder="Account holder name" />
+        </label>
+        <label class="field">
+          <span>IBAN / account number</span>
+          <input id="payoutBankIban" class="mono-input" type="text" maxlength="80" placeholder="IBAN or account number" />
+        </label>
+        <label class="field">
+          <span>SWIFT / BIC</span>
+          <input id="payoutBankSwift" class="mono-input" type="text" maxlength="40" placeholder="Optional" />
+        </label>
+        <label class="field">
+          <span>Notes</span>
+          <textarea id="payoutNotes" rows="3" maxlength="300" placeholder="Optional payout notes"></textarea>
+        </label>
+        <div class="actions">
+          <button id="savePayoutSettings" class="btn btn-primary" type="button">Save payout settings</button>
+        </div>
+        <p id="payoutStatusText" class="hint">Payout details stay on file for manual payout review.</p>
+      </section>
+
+      <section id="recentConversionsSection" class="card stack hidden">
+        <h2>Recent conversions</h2>
+        <div id="recentConversions" class="list-stack">
+          <p class="hint">No conversions tracked yet.</p>
+        </div>
+      </section>
+
+      <section id="applicationSection" class="card stack hidden">
+        <h2>Apply to the program</h2>
+        <p class="hint">Invited creators can still use this form to lock in their preferred code and accept the program terms on record.</p>
+        <label class="field">
+          <span>Preferred affiliate code</span>
+          <input id="applicationAffiliateCode" class="mono-input" type="text" maxlength="24" placeholder="FISHBATTERY" />
+        </label>
+        <label class="field">
+          <span>Website or primary channel</span>
+          <input id="applicationWebsiteUrl" type="text" maxlength="200" placeholder="https://..." />
+        </label>
+        <label class="field">
+          <span>Primary platform</span>
+          <input id="applicationPrimaryPlatform" type="text" maxlength="80" placeholder="YouTube, TikTok, Discord, Twitch..." />
+        </label>
+        <label class="field">
+          <span>Audience summary</span>
+          <textarea id="applicationAudienceSummary" rows="3" maxlength="400" placeholder="Who follows you and why are they a good fit for Fishbattery?"></textarea>
+        </label>
+        <label class="field">
+          <span>How you plan to promote Fishbattery</span>
+          <textarea id="applicationPromotionPlan" rows="4" maxlength="600" placeholder="Videos, stream descriptions, tutorials, Discord posts, etc."></textarea>
+        </label>
+        <label class="field">
+          <span>Extra notes</span>
+          <textarea id="applicationNotes" rows="3" maxlength="600" placeholder="Optional context for review"></textarea>
+        </label>
+        <label class="checkbox-row">
+          <input id="applicationAcceptedTerms" type="checkbox" />
+          <span>I have read, understood, and agree to be bound by the <a href="./affiliate-terms.html" target="_blank" rel="noreferrer">Fishbattery Affiliate Program Terms</a>.</span>
+        </label>
+        <div class="actions">
+          <button id="submitAffiliateApplication" class="btn btn-primary" type="button">Submit affiliate application</button>
+        </div>
+        <p id="applicationStatusText" class="hint">Applications are reviewed before referral links are activated.</p>
+      </section>
+
+      <footer class="card legal-footer">
+        <div class="legal-main">
+          <strong>Fishbattery Launcher</strong>
+          <div class="legal-links">
+            <a href="./index.html">Home</a>
+            <a href="./download.html">Download</a>
+            <a href="./account.html">Account</a>
+            <a href="./affiliate-terms.html">Affiliate Terms</a>
+            <a href="./terms.html">Terms of Service</a>
+            <a href="./privacy.html">Privacy Policy</a>
+            <a href="https://discord.gg/yT5zRsRXsf" target="_blank" rel="noreferrer">Discord</a>
+            <a href="mailto:support@fishbattery.app">Contact</a>
+          </div>
+        </div>
+        <div class="legal-copy">
+          <span>© Fishbattery • Based in Denmark</span>
+          <span>Not affiliated with Mojang or Microsoft.</span>
+        </div>
+      </footer>
+    </main>
+    <script src="./consent.js?v=affiliate-1"></script>
+    <script src="./site-nav.js?v=affiliate-1"></script>
+    <script src="./affiliate.js?v=affiliate-1"></script>
+  </body>
+</html>

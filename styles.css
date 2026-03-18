@@ -248,6 +248,70 @@ h2 {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.stats-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.stat-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem;
+  background: rgba(8, 20, 33, 0.65);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.stat-card span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stat-card strong {
+  font-size: 1.2rem;
+}
+
+.mono-input {
+  font-family: "IBM Plex Mono", "Consolas", monospace;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.checkbox-row input {
+  margin-top: 0.2rem;
+}
+
+.list-stack {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.conversion-row {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0.8rem 0.9rem;
+  background: rgba(8, 20, 33, 0.5);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.conversion-row strong {
+  font-size: 0.95rem;
+}
+
+.conversion-row .hint {
+  margin-top: 0;
+}
+
 /* About panel: resources */
 .about-panel .lead { margin-bottom: 10px; }
 

@@ -37,9 +37,6 @@
 
   ensurePhotoCredit();
 
-  // All pages that use this script provide an auth action container.
-  const container = document.getElementById("authActions");
-  if (!container) return;
   // Primary hosted API endpoint.
   const PUBLIC_API_BASE = "https://fishbattery-auth-api-production.up.railway.app";
   // Local development fallback logic.
@@ -49,6 +46,9 @@
   const API_BASES_DEFAULT = isLocalDev
     ? [PUBLIC_API_BASE, "http://localhost:3000"]
     : [PUBLIC_API_BASE];
+  // All pages that use this script provide an auth action container.
+  const container = document.getElementById("authActions");
+  if (!container) return;
 
   // Remove local session artifacts.
   function clearSession() {
@@ -116,6 +116,75 @@
       if (!out.includes(base)) out.push(base);
     }
     return out;
+  }
+
+  function getAffiliateSessionId() {
+    const existing = (localStorage.getItem("fishbattery.affiliateSessionId") || "").trim();
+    if (existing) return existing;
+    const created = `aff_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+    localStorage.setItem("fishbattery.affiliateSessionId", created);
+    return created;
+  }
+
+  function storeAffiliateReferral(code) {
+    const normalized = String(code || "").trim().toUpperCase();
+    if (!normalized) return;
+    const now = Date.now();
+    try {
+      const current = JSON.parse(localStorage.getItem("fishbattery.affiliateReferral") || "null") || {};
+      const next = {
+        code: normalized,
+        firstSeenAt: Number(current.firstSeenAt || now) || now,
+        lastSeenAt: now
+      };
+      localStorage.setItem("fishbattery.affiliateReferral", JSON.stringify(next));
+    } catch {
+      localStorage.setItem("fishbattery.affiliateReferral", JSON.stringify({
+        code: normalized,
+        firstSeenAt: now,
+        lastSeenAt: now
+      }));
+    }
+  }
+
+  async function trackAffiliateReferralFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const referralCode = String(params.get("ref") || "").trim().toUpperCase();
+    if (!referralCode) return;
+
+    storeAffiliateReferral(referralCode);
+    const payload = {
+      referralCode,
+      sessionId: getAffiliateSessionId(),
+      path: `${window.location.pathname}${window.location.search}`,
+      referrerHost: (() => {
+        try {
+          return document.referrer ? new URL(document.referrer).host : "";
+        } catch {
+          return "";
+        }
+      })()
+    };
+
+    const authToken = (localStorage.getItem("fishbattery.token") || "").trim();
+    for (const base of getApiBases()) {
+      try {
+        const response = await fetch(`${base}/v1/affiliate/visit`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+          },
+          body: JSON.stringify(payload)
+        });
+        if (response.ok) {
+          localStorage.setItem("fishbattery.apiBaseResolved", base);
+          break;
+        }
+      } catch {
+        // Ignore tracking failures; never block navigation rendering.
+      }
+    }
   }
 
   // Validate token by calling session endpoint on available API bases.
@@ -186,6 +255,8 @@
     }
     setSponsoredVisibility(!isAdsFreeAccount(account));
   }
+
+  void trackAffiliateReferralFromQuery();
 
   // Bootstrap:
   // If no token, render logged out immediately.
