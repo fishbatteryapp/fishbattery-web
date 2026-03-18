@@ -115,26 +115,32 @@
           <span>Contact name</span>
           <input id="payoutContactName" type="text" maxlength="120" placeholder="Name for payout verification" />
         </label>
-        <label class="field">
-          <span>PayPal email</span>
-          <input id="payoutPaypalEmail" type="email" maxlength="200" placeholder="name@example.com" />
-        </label>
-        <label class="field">
-          <span>Stripe email</span>
-          <input id="payoutStripeEmail" type="email" maxlength="200" placeholder="name@example.com" />
-        </label>
-        <label class="field">
-          <span>Bank account name</span>
-          <input id="payoutBankAccountName" type="text" maxlength="120" placeholder="Account holder name" />
-        </label>
-        <label class="field">
-          <span>IBAN / account number</span>
-          <input id="payoutBankIban" class="mono-input" type="text" maxlength="80" placeholder="IBAN or account number" />
-        </label>
-        <label class="field">
-          <span>SWIFT / BIC</span>
-          <input id="payoutBankSwift" class="mono-input" type="text" maxlength="40" placeholder="Optional" />
-        </label>
+        <div id="payoutPaypalFields" class="stack hidden">
+          <label class="field">
+            <span>PayPal email</span>
+            <input id="payoutPaypalEmail" type="email" maxlength="200" placeholder="name@example.com" />
+          </label>
+        </div>
+        <div id="payoutStripeFields" class="stack hidden">
+          <label class="field">
+            <span>Stripe email</span>
+            <input id="payoutStripeEmail" type="email" maxlength="200" placeholder="name@example.com" />
+          </label>
+        </div>
+        <div id="payoutBankFields" class="stack hidden">
+          <label class="field">
+            <span>Bank account name</span>
+            <input id="payoutBankAccountName" type="text" maxlength="120" placeholder="Account holder name" />
+          </label>
+          <label class="field">
+            <span>IBAN / account number</span>
+            <input id="payoutBankIban" class="mono-input" type="text" maxlength="80" placeholder="IBAN or account number" />
+          </label>
+          <label class="field">
+            <span>SWIFT / BIC</span>
+            <input id="payoutBankSwift" class="mono-input" type="text" maxlength="40" placeholder="Optional" />
+          </label>
+        </div>
         <label class="field">
           <span>Notes</span>
           <textarea id="payoutNotes" rows="3" maxlength="300" placeholder="Optional payout notes"></textarea>

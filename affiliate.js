@@ -29,6 +29,9 @@
   const recentConversions = document.getElementById("recentConversions");
   const payoutMethod = document.getElementById("payoutMethod");
   const payoutContactName = document.getElementById("payoutContactName");
+  const payoutPaypalFields = document.getElementById("payoutPaypalFields");
+  const payoutStripeFields = document.getElementById("payoutStripeFields");
+  const payoutBankFields = document.getElementById("payoutBankFields");
   const payoutPaypalEmail = document.getElementById("payoutPaypalEmail");
   const payoutStripeEmail = document.getElementById("payoutStripeEmail");
   const payoutBankAccountName = document.getElementById("payoutBankAccountName");
@@ -112,6 +115,13 @@
     recentConversionsSection.classList.add("hidden");
   }
 
+  function renderPayoutMethodFields() {
+    const method = String(payoutMethod?.value || "").trim();
+    payoutPaypalFields?.classList.toggle("hidden", method !== "paypal");
+    payoutStripeFields?.classList.toggle("hidden", method !== "stripe_connect");
+    payoutBankFields?.classList.toggle("hidden", method !== "bank_transfer");
+  }
+
   function renderProgram(program) {
     programSummary.textContent = `Commission is ${formatUsdFromCents(program?.commissionCents)} per valid premium subscription, with a ${program?.holdDays || 45}-day review hold before payout eligibility.`;
     programCommission.textContent = formatUsdFromCents(program?.commissionCents);
@@ -172,6 +182,7 @@
       payoutBankIban.value = String(affiliate.payoutDetails?.bankIban || "");
       payoutBankSwift.value = String(affiliate.payoutDetails?.bankSwift || "");
       payoutNotes.value = String(affiliate.payoutDetails?.notes || "");
+      renderPayoutMethodFields();
 
       renderConversions(affiliate.recentConversions || []);
       payoutStatusText.textContent = `Threshold: ${formatUsdFromCents(affiliate.payoutThresholdCents)} • Commission: ${formatUsdFromCents(affiliate.commissionCents)} per valid premium signup.`;
@@ -213,6 +224,10 @@
       referralUrlInput.select();
       copyStatusText.textContent = "Copy failed automatically. The link is selected so you can copy it manually.";
     }
+  });
+
+  payoutMethod?.addEventListener("change", () => {
+    renderPayoutMethodFields();
   });
 
   document.getElementById("submitAffiliateApplication")?.addEventListener("click", async () => {
@@ -283,4 +298,6 @@
     affiliateStatusSummary.textContent = "Could not load your affiliate dashboard right now.";
     affiliateStatusDetail.textContent = message || "Please refresh and try again.";
   });
+
+  renderPayoutMethodFields();
 })();
