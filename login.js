@@ -36,6 +36,7 @@
 
   let mode = "login";
   let pendingTwoFactorChallenge = "";
+  const GOOGLE_REDIRECT_STORAGE_KEY = "fishbattery.googleRedirectUri";
 
   // Small status text helper for user feedback.
   function write(value) {
@@ -159,22 +160,86 @@
     }
   }
 
-  // OAuth redirect URI is current page URL.
-  function currentRedirectUri() {
-    return `${window.location.origin}${window.location.pathname}`;
+  function getConfiguredGoogleRedirectOverride() {
+    const query = new URLSearchParams(window.location.search);
+    const queryOverride = String(query.get("google_redirect_uri") || "").trim();
+    if (queryOverride) return queryOverride;
+    return String(localStorage.getItem("fishbattery.googleRedirectUriOverride") || "").trim();
+  }
+
+  function getCanonicalRedirectUri() {
+    const canonicalLink = document.querySelector('link[rel="canonical"]');
+    const href = String(canonicalLink?.getAttribute("href") || "").trim();
+    return href || "";
+  }
+
+  function normalizeRedirectCandidate(value) {
+    const candidate = String(value || "").trim();
+    if (!candidate) return "";
+    try {
+      return new URL(candidate, window.location.origin).toString();
+    } catch {
+      return "";
+    }
+  }
+
+  // Build a small set of possible redirect URIs so the client can tolerate
+  // minor routing differences between local/dev/static hosting setups.
+  function googleRedirectUriCandidates() {
+    const current = `${window.location.origin}${window.location.pathname}`;
+    const canonical = getCanonicalRedirectUri();
+    const override = getConfiguredGoogleRedirectOverride();
+    const candidates = [];
+
+    function push(value) {
+      const normalized = normalizeRedirectCandidate(value);
+      if (normalized && !candidates.includes(normalized)) candidates.push(normalized);
+    }
+
+    push(override);
+    push(current);
+    push(canonical);
+
+    if (/\/login(?:\.html)?$/i.test(window.location.pathname)) {
+      push(`${window.location.origin}/login.html`);
+      push(`${window.location.origin}/login`);
+    }
+
+    return candidates;
+  }
+
+  function getStoredGoogleRedirectUri() {
+    return String(sessionStorage.getItem(GOOGLE_REDIRECT_STORAGE_KEY) || "").trim();
+  }
+
+  function setStoredGoogleRedirectUri(value) {
+    const normalized = normalizeRedirectCandidate(value);
+    if (!normalized) return;
+    sessionStorage.setItem(GOOGLE_REDIRECT_STORAGE_KEY, normalized);
   }
 
   // Start Google OAuth by requesting start params from API and redirecting.
   async function startGoogleAuth() {
     write("Opening Google sign-in...");
-    const redirectUri = currentRedirectUri();
-    const startData = await request("/v1/auth/google/desktop/start", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ redirectUri })
-    });
-    if (!startData?.authUrl) throw new Error("Could not start Google sign-in");
-    window.location.href = startData.authUrl;
+    let lastError = null;
+    for (const redirectUri of googleRedirectUriCandidates()) {
+      try {
+        const startData = await request("/v1/auth/google/desktop/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ redirectUri })
+        });
+        if (!startData?.authUrl) throw new Error("Could not start Google sign-in");
+        setStoredGoogleRedirectUri(redirectUri);
+        window.location.href = startData.authUrl;
+        return;
+      } catch (error) {
+        lastError = error;
+        const message = String(error?.message || error || "").toLowerCase();
+        if (!message.includes("redirecturi")) throw error;
+      }
+    }
+    throw (lastError instanceof Error ? lastError : new Error(String(lastError || "Could not start Google sign-in")));
   }
 
   // Complete OAuth flow when redirected back with code+state in query string.
@@ -194,7 +259,7 @@
     if (!code || !state) return;
 
     write("Finalizing Google sign-in...");
-    const redirectUri = currentRedirectUri();
+    const redirectUri = getStoredGoogleRedirectUri() || googleRedirectUriCandidates()[0] || `${window.location.origin}${window.location.pathname}`;
     const data = await request("/v1/auth/google/desktop/complete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -209,6 +274,7 @@
     query.delete("scope");
     query.delete("authuser");
     query.delete("prompt");
+    sessionStorage.removeItem(GOOGLE_REDIRECT_STORAGE_KEY);
     window.history.replaceState({}, "", `${window.location.pathname}${query.toString() ? `?${query.toString()}` : ""}`);
     window.location.href = "./account.html";
   }
@@ -228,7 +294,8 @@
       return "Google sign-in is not configured yet.";
     }
     if (lower.includes("redirecturi")) {
-      return "Google redirect setup is incomplete. Please contact support.";
+      const attempted = getStoredGoogleRedirectUri() || googleRedirectUriCandidates()[0] || `${window.location.origin}${window.location.pathname}`;
+      return `Google sign-in is configured, but this page URL is not on the API allowlist yet: ${attempted}`;
     }
     return "Could not complete authentication right now. Please try again.";
   }
