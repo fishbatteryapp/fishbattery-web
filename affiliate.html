@@ -179,10 +179,10 @@
           <span>Extra notes</span>
           <textarea id="applicationNotes" rows="3" maxlength="600" placeholder="Optional context for review"></textarea>
         </label>
-        <label class="checkbox-row">
-          <input id="applicationAcceptedTerms" type="checkbox" />
-          <span>I have read, understood, and agree to be bound by the <a href="./affiliate-terms.html" target="_blank" rel="noreferrer">Fishbattery Affiliate Program Terms</a>.</span>
-        </label>
+        <div class="checkbox-row">
+          <input id="applicationAcceptedTerms" class="checkbox-input" type="checkbox" />
+          <label for="applicationAcceptedTerms" class="checkbox-label">I have read, understood, and agree to be bound by the <a href="./affiliate-terms.html" target="_blank" rel="noreferrer">Fishbattery Affiliate Program Terms</a>.</label>
+        </div>
         <div class="actions">
           <button id="submitAffiliateApplication" class="btn btn-primary" type="button">Submit affiliate application</button>
         </div>
