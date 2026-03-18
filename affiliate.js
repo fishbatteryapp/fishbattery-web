@@ -117,9 +117,21 @@
 
   function renderPayoutMethodFields() {
     const method = String(payoutMethod?.value || "").trim();
-    payoutPaypalFields?.classList.toggle("hidden", method !== "paypal");
-    payoutStripeFields?.classList.toggle("hidden", method !== "stripe_connect");
-    payoutBankFields?.classList.toggle("hidden", method !== "bank_transfer");
+    if (payoutPaypalFields) {
+      const visible = method === "paypal";
+      payoutPaypalFields.classList.toggle("hidden", !visible);
+      payoutPaypalFields.style.display = visible ? "grid" : "none";
+    }
+    if (payoutStripeFields) {
+      const visible = method === "stripe_connect";
+      payoutStripeFields.classList.toggle("hidden", !visible);
+      payoutStripeFields.style.display = visible ? "grid" : "none";
+    }
+    if (payoutBankFields) {
+      const visible = method === "bank_transfer";
+      payoutBankFields.classList.toggle("hidden", !visible);
+      payoutBankFields.style.display = visible ? "grid" : "none";
+    }
   }
 
   function renderProgram(program) {
