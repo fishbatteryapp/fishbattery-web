@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="icon" type="image/x-icon" href="/assets/Logo transparent.png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Affiliate Admin - Fishbattery</title>
+    <meta name="description" content="Affiliate approvals and payout operations for Fishbattery." />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="canonical" href="https://fishbattery.app/affiliate-admin.html" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="ads-page">
+    <div class="bg"></div>
+    <main class="page narrow">
+      <header class="topbar card">
+        <div class="top-left">
+          <a class="brand" href="./index.html">Fishbattery</a>
+          <nav class="top-links">
+            <a href="./affiliate.html">Affiliate dashboard</a>
+            <a href="./affiliate-admin.html" class="active">Affiliate admin</a>
+            <a href="./account.html">Account</a>
+          </nav>
+        </div>
+        <div id="authActions" class="actions"></div>
+      </header>
+
+      <header class="card ads-hero">
+        <p class="kicker">Affiliate admin</p>
+        <h1>Approvals and payouts</h1>
+        <p class="lead">Review affiliate applications, move ready commissions into approved state, and record payouts with history.</p>
+        <p id="adminNotice" class="hint">Enter your admin key to load affiliate operations.</p>
+      </header>
+
+      <section class="card dashboard-controls">
+        <div class="field">
+          <span>Admin key</span>
+          <input id="adminKeyInput" type="password" placeholder="Railway ADMIN_API_KEY" />
+        </div>
+        <div class="field">
+          <span>Actor label</span>
+          <input id="adminActorInput" type="text" placeholder="Your name or email" />
+        </div>
+        <div class="actions">
+          <button id="saveAdminAccess" class="btn btn-primary" type="button">Save access</button>
+          <button id="refreshAdminData" class="btn" type="button">Refresh</button>
+          <button id="exportAffiliateCsv" class="btn" type="button">Export CSV</button>
+        </div>
+      </section>
+
+      <section class="ads-kpi-grid">
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Affiliates</p>
+          <p id="adminKpiAffiliates" class="ads-kpi-value">0</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Ready to review</p>
+          <p id="adminKpiReady" class="ads-kpi-value">USD $0.00</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Approved unpaid</p>
+          <p id="adminKpiApproved" class="ads-kpi-value">USD $0.00</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Paid total</p>
+          <p id="adminKpiPaid" class="ads-kpi-value">USD $0.00</p>
+        </article>
+      </section>
+
+      <section class="card">
+        <p class="kicker">Affiliate accounts</p>
+        <h2>Approvals and balances</h2>
+        <div class="dashboard-table-wrap">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Affiliate</th>
+                <th>Code</th>
+                <th>Status</th>
+                <th>Clicks</th>
+                <th>Conversions</th>
+                <th>Ready</th>
+                <th>Approved</th>
+                <th>Paid</th>
+                <th>Payout method</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="affiliateAdminRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <p class="kicker">Payout history</p>
+        <h2>Recorded payouts</h2>
+        <div class="dashboard-table-wrap">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Affiliate</th>
+                <th>Paid at</th>
+                <th>Amount</th>
+                <th>Conversions</th>
+                <th>Method</th>
+                <th>Reference</th>
+                <th>Created by</th>
+              </tr>
+            </thead>
+            <tbody id="affiliatePayoutRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="card legal-footer">
+        <div class="legal-main">
+          <strong>Fishbattery Launcher</strong>
+          <div class="legal-links">
+            <a href="./index.html">Home</a>
+            <a href="./affiliate.html">Affiliate dashboard</a>
+            <a href="./affiliate-terms.html">Affiliate terms</a>
+          </div>
+        </div>
+        <div class="legal-copy">
+          <span>&copy; Fishbattery</span>
+          <span>Admin payout tools are internal operations only.</span>
+        </div>
+      </footer>
+    </main>
+    <script src="./consent.js"></script>
+    <script src="./site-nav.js"></script>
+    <script src="./affiliate-admin.js?v=1"></script>
+  </body>
+</html>

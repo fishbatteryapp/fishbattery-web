@@ -118,6 +118,37 @@
     return out;
   }
 
+  async function requestJson(path, init) {
+    let lastError = new Error("Request failed");
+    for (const base of getApiBases()) {
+      try {
+        const response = await fetch(`${base}${path}`, init);
+        const text = await response.text();
+        let parsed = text;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          // keep text
+        }
+        if (!response.ok) {
+          throw new Error(typeof parsed === "string" ? parsed : JSON.stringify(parsed, null, 2));
+        }
+        localStorage.setItem("fishbattery.apiBaseResolved", base);
+        return parsed;
+      } catch (error) {
+        const msg = String((error && error.message) || error || "").toLowerCase();
+        const isNetworkError =
+          msg.includes("failed to fetch") ||
+          msg.includes("name_not_resolved") ||
+          msg.includes("err_connection_refused") ||
+          msg.includes("networkerror");
+        if (!isNetworkError) throw (error instanceof Error ? error : new Error(String(error)));
+        lastError = error instanceof Error ? error : new Error(String(error));
+      }
+    }
+    throw lastError;
+  }
+
   function getAffiliateSessionId() {
     const existing = (localStorage.getItem("fishbattery.affiliateSessionId") || "").trim();
     if (existing) return existing;
@@ -184,6 +215,90 @@
       } catch {
         // Ignore tracking failures; never block navigation rendering.
       }
+    }
+  }
+
+  function ensureAffiliateTermsModal() {
+    let modal = document.getElementById("affiliateTermsModal");
+    if (modal) return modal;
+    modal = document.createElement("div");
+    modal.id = "affiliateTermsModal";
+    modal.className = "affiliate-terms-modal hidden";
+    modal.innerHTML = `
+      <div class="affiliate-terms-modal-backdrop"></div>
+      <section class="affiliate-terms-modal-panel" role="dialog" aria-modal="true" aria-labelledby="affiliateTermsModalTitle">
+        <p class="kicker">Affiliate update</p>
+        <h2 id="affiliateTermsModalTitle">Affiliate terms updated</h2>
+        <p id="affiliateTermsModalLead" class="lead">You need to accept the updated terms before continuing as a Fishbattery affiliate.</p>
+        <p id="affiliateTermsModalMeta" class="hint"></p>
+        <div class="checkbox-row">
+          <input id="affiliateTermsModalCheckbox" class="checkbox-input" type="checkbox" />
+          <label for="affiliateTermsModalCheckbox" id="affiliateTermsModalCheckboxLabel" class="checkbox-label"></label>
+        </div>
+        <div class="actions">
+          <a class="btn" href="./affiliate-terms.html" target="_blank" rel="noreferrer">Read updated terms</a>
+          <button id="affiliateTermsModalAgree" class="btn btn-primary" type="button">Agree and continue</button>
+        </div>
+        <p id="affiliateTermsModalStatus" class="hint"></p>
+      </section>
+    `;
+    document.body.appendChild(modal);
+    return modal;
+  }
+
+  function showAffiliateTermsModal(data, token) {
+    const modal = ensureAffiliateTermsModal();
+    const checkbox = document.getElementById("affiliateTermsModalCheckbox");
+    const checkboxLabel = document.getElementById("affiliateTermsModalCheckboxLabel");
+    const meta = document.getElementById("affiliateTermsModalMeta");
+    const status = document.getElementById("affiliateTermsModalStatus");
+    const agreeBtn = document.getElementById("affiliateTermsModalAgree");
+    if (!checkbox || !checkboxLabel || !meta || !status || !agreeBtn) return;
+
+    checkbox.checked = false;
+    checkboxLabel.textContent = String(data?.checkboxLabel || "I agree to the updated affiliate terms.");
+    meta.textContent = `Accepted version: ${String(data?.acceptedTermsVersion || "none")} • Current version: ${String(data?.currentTermsVersion || "current")} • Effective date: ${String(data?.effectiveDate || "")}`;
+    status.textContent = "Accept the updated terms to keep using your affiliate account.";
+    modal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+
+    agreeBtn.onclick = async () => {
+      if (!checkbox.checked) {
+        status.textContent = "Tick the checkbox first.";
+        return;
+      }
+      try {
+        status.textContent = "Saving your acceptance...";
+        agreeBtn.setAttribute("disabled", "disabled");
+        await requestJson("/v1/affiliate/accept-terms", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ acceptedTerms: true })
+        });
+        status.textContent = "Updated terms accepted.";
+        modal.classList.add("hidden");
+        document.body.style.overflow = "";
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        status.textContent = `Could not save your acceptance: ${message}`;
+      } finally {
+        agreeBtn.removeAttribute("disabled");
+      }
+    };
+  }
+
+  async function maybePromptAffiliateTerms(token) {
+    try {
+      const data = await requestJson("/v1/affiliate/terms-status", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!data?.hasAffiliateAccount || !data?.needsAcceptance) return;
+      showAffiliateTermsModal(data, token);
+    } catch {
+      // Non-blocking if the affiliate terms check fails.
     }
   }
 
@@ -272,6 +387,7 @@
   tryRestoreAccountFromToken(token).then((result) => {
     if (result.status === "ok" && result.account) {
       renderLoggedIn(result.account);
+      void maybePromptAffiliateTerms((localStorage.getItem("fishbattery.token") || "").trim() || token);
       return;
     }
 
