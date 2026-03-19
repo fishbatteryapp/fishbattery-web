@@ -113,9 +113,21 @@ html.reduced-motion * {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
   color: var(--text);
   text-decoration: none;
   font-weight: 700;
+}
+
+.brand::before {
+  content: "";
+  width: 1.55rem;
+  height: 1.55rem;
+  flex: 0 0 auto;
+  background: url("./assets/branding/transparent.svg") center center / contain no-repeat;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.28));
 }
 
 .top-links {
