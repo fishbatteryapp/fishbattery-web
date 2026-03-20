@@ -126,7 +126,7 @@ html.reduced-motion * {
   width: 1.55rem;
   height: 1.55rem;
   flex: 0 0 auto;
-  background: url("./assets/branding/transparent.svg") center center / contain no-repeat;
+  background: url("./assets/branding/Fishbattery_Logo_Full.png") center center / contain no-repeat;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.28));
 }
 
