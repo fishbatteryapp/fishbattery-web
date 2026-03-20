@@ -67,6 +67,33 @@
         </article>
       </section>
 
+      <section class="card dashboard-controls">
+        <div class="field">
+          <span>Affiliate</span>
+          <select id="manualCreditAffiliateSelect">
+            <option value="">Load affiliate data first</option>
+          </select>
+        </div>
+        <div class="field">
+          <span>Amount in USD</span>
+          <input id="manualCreditAmountInput" type="number" min="0.01" step="0.01" placeholder="50.00" />
+        </div>
+        <div class="field">
+          <span>Credit state</span>
+          <select id="manualCreditStatusSelect">
+            <option value="approved">Approved unpaid</option>
+            <option value="pending">Ready to review</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column: 1 / -1;">
+          <span>Note</span>
+          <input id="manualCreditNoteInput" type="text" maxlength="400" placeholder="Bonus credit, correction, goodwill adjustment..." />
+        </div>
+        <div class="actions">
+          <button id="submitManualCredit" class="btn btn-primary" type="button">Add manual credit</button>
+        </div>
+      </section>
+
       <section class="card">
         <p class="kicker">Affiliate accounts</p>
         <h2>Approvals and balances</h2>
@@ -152,6 +179,6 @@
     </main>
     <script src="./consent.js"></script>
     <script src="./site-nav.js"></script>
-    <script src="./affiliate-admin.js?v=2"></script>
+    <script src="./affiliate-admin.js?v=3"></script>
   </body>
 </html>

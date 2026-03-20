@@ -12,6 +12,11 @@
   const affiliateAdminRows = document.getElementById("affiliateAdminRows");
   const affiliatePayoutRows = document.getElementById("affiliatePayoutRows");
   const affiliateConversionRows = document.getElementById("affiliateConversionRows");
+  const manualCreditAffiliateSelect = document.getElementById("manualCreditAffiliateSelect");
+  const manualCreditAmountInput = document.getElementById("manualCreditAmountInput");
+  const manualCreditStatusSelect = document.getElementById("manualCreditStatusSelect");
+  const manualCreditNoteInput = document.getElementById("manualCreditNoteInput");
+  const submitManualCreditBtn = document.getElementById("submitManualCredit");
   const adminKpiAffiliates = document.getElementById("adminKpiAffiliates");
   const adminKpiReady = document.getElementById("adminKpiReady");
   const adminKpiApproved = document.getElementById("adminKpiApproved");
@@ -119,6 +124,29 @@
     adminKpiReady.textContent = formatUsdFromCents(readyCents);
     adminKpiApproved.textContent = formatUsdFromCents(approvedCents);
     adminKpiPaid.textContent = formatUsdFromCents(paidCents);
+  }
+
+  function renderManualCreditOptions() {
+    if (!manualCreditAffiliateSelect) return;
+    const previous = String(manualCreditAffiliateSelect.value || "");
+    if (!currentAffiliates.length) {
+      manualCreditAffiliateSelect.innerHTML = `<option value="">Load affiliate data first</option>`;
+      manualCreditAffiliateSelect.value = "";
+      return;
+    }
+    manualCreditAffiliateSelect.innerHTML = [
+      `<option value="">Choose an affiliate</option>`,
+      ...currentAffiliates.map((item) => {
+        const name = escapeHtml(item.displayName || "Unknown");
+        const email = escapeHtml(item.email || "");
+        const code = escapeHtml(item.affiliateCode || "");
+        const status = escapeHtml(item.status || "pending");
+        return `<option value="${escapeHtml(item.userId)}">${name} (${email || code}) | ${code} | ${status}</option>`;
+      })
+    ].join("");
+    if (previous && currentAffiliates.some((item) => String(item.userId) === previous)) {
+      manualCreditAffiliateSelect.value = previous;
+    }
   }
 
   function payoutMethodLabel(value) {
@@ -387,6 +415,7 @@
       currentPayouts = Array.isArray(data?.payouts) ? data.payouts : [];
       currentConversions = Array.isArray(data?.conversions) ? data.conversions : [];
       renderKpis();
+      renderManualCreditOptions();
       renderAffiliates();
       renderPayouts();
       renderConversions();
@@ -396,6 +425,7 @@
       affiliateAdminRows.innerHTML = `<tr><td colspan="10">Enter a valid admin key to load affiliate data.</td></tr>`;
       affiliatePayoutRows.innerHTML = `<tr><td colspan="7">No payout data loaded.</td></tr>`;
       affiliateConversionRows.innerHTML = `<tr><td colspan="9">No conversion data loaded.</td></tr>`;
+      renderManualCreditOptions();
     }
   }
 
@@ -423,11 +453,49 @@
     setNotice("Affiliate CSV exported.");
   });
 
+  submitManualCreditBtn?.addEventListener("click", async () => {
+    const userId = String(manualCreditAffiliateSelect?.value || "").trim();
+    const usdAmount = Number(manualCreditAmountInput?.value || 0);
+    const amountCents = Math.round(usdAmount * 100);
+    const status = String(manualCreditStatusSelect?.value || "approved").trim().toLowerCase();
+    const note = String(manualCreditNoteInput?.value || "").trim();
+
+    if (!userId) {
+      setNotice("Choose an affiliate before adding a manual credit.");
+      return;
+    }
+    if (!Number.isFinite(amountCents) || amountCents <= 0) {
+      setNotice("Enter a valid credit amount greater than 0.");
+      return;
+    }
+
+    try {
+      setNotice("Creating manual credit...");
+      const data = await request(`/v1/admin/affiliates/${encodeURIComponent(userId)}/manual-credit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amountCents, status, note })
+      });
+      currentAffiliates = Array.isArray(data?.affiliates) ? data.affiliates : currentAffiliates;
+      currentConversions = Array.isArray(data?.conversions) ? data.conversions : currentConversions;
+      renderKpis();
+      renderManualCreditOptions();
+      renderAffiliates();
+      renderConversions();
+      if (manualCreditAmountInput) manualCreditAmountInput.value = "";
+      if (manualCreditNoteInput) manualCreditNoteInput.value = "";
+      setNotice(String(data?.message || "Manual credit created."));
+    } catch (error) {
+      setNotice(`Could not create manual credit: ${String(error?.message || error)}`);
+    }
+  });
+
   if (getStoredAdminKey()) {
     void refreshAll();
   } else {
     affiliateAdminRows.innerHTML = `<tr><td colspan="10">Save your admin key above to start.</td></tr>`;
     affiliatePayoutRows.innerHTML = `<tr><td colspan="7">Save your admin key above to load payout history.</td></tr>`;
     affiliateConversionRows.innerHTML = `<tr><td colspan="9">Save your admin key above to load conversion history.</td></tr>`;
+    renderManualCreditOptions();
   }
 })();
