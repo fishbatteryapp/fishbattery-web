@@ -205,8 +205,9 @@
     const imageUrl = String(ad?.imageUrl || "").trim();
     const placements = Array.isArray(ad?.placements) ? ad.placements.map((x) => String(x || "").trim()) : [];
     const active = ad?.active !== false;
+    const hasRenderableContent = !!(title || body || imageUrl);
 
-    if (!active || !title || !body || !/^https?:\/\//i.test(link)) return null;
+    if (!active || !hasRenderableContent || !/^https?:\/\//i.test(link)) return null;
     return { id, title, body, cta, link, media, imageUrl, placements };
   }
 
@@ -247,8 +248,15 @@
     const cleanTitle = String(ad.title || "")
       .replace(/^\s*sponsored\s*:\s*/i, "")
       .trim();
-    if (titleEl) titleEl.textContent = cleanTitle || "Partner";
-    if (bodyEl) bodyEl.textContent = ad.body;
+    if (titleEl) {
+      titleEl.textContent = cleanTitle || "";
+      titleEl.style.display = cleanTitle ? "" : "none";
+    }
+    if (bodyEl) {
+      const cleanBody = String(ad.body || "").trim();
+      bodyEl.textContent = cleanBody;
+      bodyEl.style.display = cleanBody ? "" : "none";
+    }
     wrap.style.cursor = "pointer";
     wrap.setAttribute("role", "link");
     wrap.setAttribute("tabindex", "0");
@@ -276,7 +284,7 @@
     }
     if (kickerEl) kickerEl.textContent = ad.media ? `Sponsored • ${ad.media}` : "Sponsored";
     if (imageEl) {
-      if (/^https?:\/\//i.test(ad.imageUrl || "")) {
+      if (/^(https?:\/\/|data:image\/)/i.test(ad.imageUrl || "")) {
         imageEl.style.backgroundImage =
           `linear-gradient(180deg, rgba(4,10,18,0.08), rgba(4,10,18,0.5)), url("${ad.imageUrl}")`;
         wrap.classList.add("has-image");
