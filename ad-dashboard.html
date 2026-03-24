@@ -4,18 +4,18 @@
     <link rel="icon" type="image/png" href="/assets/branding/Fishbattery_Logo_Full.png" sizes="any">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fishbattery Ad Publisher Dashboard</title>
-    <meta name="description" content="Ad publisher dashboard for Fishbattery campaigns, with performance analytics and campaign tools." />
+    <title>Fishbattery Advertiser Dashboard</title>
+    <meta name="description" content="Apply as an advertiser, review your account status, and monitor Fishbattery campaign performance." />
     <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Fishbattery" />
-    <meta property="og:title" content="Fishbattery Ad Publisher Dashboard" />
-    <meta property="og:description" content="Track impressions, clicks, CTR, and campaign pacing across Fishbattery placements." />
+    <meta property="og:title" content="Fishbattery Advertiser Dashboard" />
+    <meta property="og:description" content="Apply as an advertiser and track impressions, clicks, CTR, and campaign pacing across Fishbattery placements." />
     <meta property="og:url" content="https://fishbattery.app/ad-dashboard.html" />
     <meta property="og:image" content="https://fishbattery.app/assets/launcher%20front%20page%20screenshot.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Fishbattery Ad Publisher Dashboard" />
-    <meta name="twitter:description" content="Monitor campaign performance and use built-in publisher tools." />
+    <meta name="twitter:description" content="Apply as an advertiser and monitor campaign performance." />
     <meta name="twitter:image" content="https://fishbattery.app/assets/launcher%20front%20page%20screenshot.png" />
     <link rel="canonical" href="https://fishbattery.app/ad-dashboard.html" />
     <link rel="stylesheet" href="./styles.css" />
@@ -29,24 +29,102 @@
           <nav class="top-links">
             <a href="./download.html">Download</a>
             <a href="./advertise.html">Advertise</a>
-            <a href="./ad-dashboard.html" class="active">Publisher dashboard</a>
+            <a href="./ad-dashboard.html" class="active">Advertiser dashboard</a>
           </nav>
         </div>
         <div id="authActions" class="actions"></div>
       </header>
 
       <header class="card ads-hero">
-        <p class="kicker">Publisher dashboard</p>
-        <h1>Campaign analytics</h1>
+        <p class="kicker">Advertiser dashboard</p>
+        <h1>Applications, status, and analytics</h1>
         <p class="lead">
-          View performance by placement, compare time windows, and monitor delivery.
+          Apply once, wait for review, and then monitor delivery across the slots assigned to your account.
         </p>
-        <p id="dashboardAuthHint" class="hint">
-          Sign in to view your own campaign stats.
-        </p>
+        <p id="dashboardAuthHint" class="hint">Sign in to manage your advertiser account.</p>
       </header>
 
-      <section class="card dashboard-controls">
+      <section class="card">
+        <p class="kicker">Program</p>
+        <h2>Current inventory and pricing</h2>
+        <p id="programSummary" class="hint">Loading advertiser program details...</p>
+        <div id="programPlacementGrid" class="ads-placement-grid"></div>
+      </section>
+
+      <section class="card">
+        <p class="kicker">Your status</p>
+        <h2>Advertiser account</h2>
+        <p id="advertiserStatusSummary" class="hint">Checking your advertiser status...</p>
+        <p id="advertiserStatusDetail" class="hint"></p>
+      </section>
+
+      <section id="applicationSection" class="card stack hidden">
+        <p class="kicker">Application</p>
+        <h2>Apply as an advertiser</h2>
+        <div class="ads-form-grid">
+          <label class="field">
+            <span>Company name</span>
+            <input id="applicationCompanyName" type="text" maxlength="120" placeholder="Your company or studio" />
+          </label>
+          <label class="field">
+            <span>Website URL</span>
+            <input id="applicationWebsiteUrl" type="text" maxlength="200" placeholder="https://..." />
+          </label>
+          <label class="field">
+            <span>Primary contact</span>
+            <input id="applicationContactName" type="text" maxlength="120" placeholder="Your name" />
+          </label>
+          <label class="field">
+            <span>Billing email</span>
+            <input id="applicationBillingEmail" type="email" maxlength="200" placeholder="billing@company.com" />
+          </label>
+          <label class="field">
+            <span>Industry</span>
+            <input id="applicationIndustry" type="text" maxlength="80" placeholder="Hosting, modding tools, game server services..." />
+          </label>
+        </div>
+        <div>
+          <span>Requested placements</span>
+          <div id="applicationPlacementPicker" class="ads-placement-picker"></div>
+        </div>
+        <label class="field">
+          <span>Product summary</span>
+          <textarea id="applicationProductSummary" rows="3" maxlength="400" placeholder="What are you advertising, and why is it relevant to Fishbattery users?"></textarea>
+        </label>
+        <label class="field">
+          <span>Campaign goals</span>
+          <textarea id="applicationCampaignGoals" rows="4" maxlength="600" placeholder="What should this campaign drive: installs, signups, server trials, awareness, etc.?"></textarea>
+        </label>
+        <label class="field">
+          <span>Notes</span>
+          <textarea id="applicationNotes" rows="3" maxlength="600" placeholder="Optional context for review"></textarea>
+        </label>
+        <div class="actions">
+          <button id="submitAdvertiserApplication" class="btn btn-primary" type="button">Submit advertiser application</button>
+        </div>
+        <p id="applicationStatusText" class="hint">Applications are reviewed before campaign tools and assigned slots are enabled.</p>
+      </section>
+
+      <section id="approvedOverview" class="card hidden">
+        <p class="kicker">Assigned access</p>
+        <h2>Your approved advertiser setup</h2>
+        <div class="ads-stat-grid">
+          <article class="ads-stat-card">
+            <p class="ads-stat-label">Approved slots</p>
+            <p id="approvedPlacementList" class="ads-stat-value">-</p>
+          </article>
+          <article class="ads-stat-card">
+            <p class="ads-stat-label">Account budget</p>
+            <p id="approvedBudget" class="ads-stat-value">EUR 0.00</p>
+          </article>
+          <article class="ads-stat-card">
+            <p class="ads-stat-label">Daily limit</p>
+            <p id="approvedDailyLimit" class="ads-stat-value">EUR 0.00</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="analyticsControlsSection" class="card dashboard-controls hidden">
         <div class="field">
           <span>Time range</span>
           <select id="rangeSelect">
@@ -75,7 +153,7 @@
         </div>
       </section>
 
-      <section class="ads-kpi-grid">
+      <section id="analyticsKpisSection" class="ads-kpi-grid hidden">
         <article class="card ads-kpi-card">
           <p class="ads-kpi-label">Impressions</p>
           <p id="kpiImpressions" class="ads-kpi-value">0</p>
@@ -122,13 +200,13 @@
         </article>
       </section>
 
-      <section class="card">
+      <section id="analyticsPlacementSection" class="card hidden">
         <p class="kicker">Performance by placement</p>
         <h2>Distribution overview</h2>
         <div id="placementBars" class="ads-bars" aria-label="Placement performance chart"></div>
       </section>
 
-      <section class="card">
+      <section id="analyticsCampaignsSection" class="card hidden">
         <p class="kicker">Campaigns</p>
         <h2>Campaign status and pacing</h2>
         <div class="dashboard-table-wrap">
@@ -153,8 +231,29 @@
         </div>
       </section>
 
-      <section class="card">
-        <p class="kicker">Publisher tools</p>
+      <section id="campaignBudgetSection" class="card hidden">
+        <p class="kicker">Budget Allocation</p>
+        <h2>Allocated budget per ad</h2>
+        <div class="dashboard-table-wrap">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Status</th>
+                <th>Placements</th>
+                <th>Spent</th>
+                <th>Allocated</th>
+                <th>Remaining</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="campaignBudgetRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="analyticsToolsSection" class="card hidden">
+        <p class="kicker">Advertiser tools</p>
         <h2>Quick actions</h2>
         <div class="ads-budget-topup">
           <label for="budgetTopupAmount">Add budget (EUR)</label>
@@ -171,7 +270,7 @@
           <button class="btn" type="button" id="btnRefresh">Refresh live data</button>
           <a class="btn btn-primary" href="mailto:ads@fishbattery.app?subject=Fishbattery%20Campaign%20Request">Request campaign changes</a>
         </div>
-        <p id="dashboardNotice" class="hint">Choose filters above to focus performance views.</p>
+        <p id="dashboardNotice" class="hint">Analytics unlock after approval and slot assignment.</p>
       </section>
 
       <footer class="card legal-footer">
@@ -186,7 +285,7 @@
         </div>
         <div class="legal-copy">
           <span>&copy; Fishbattery</span>
-          <span>Analytics shown here are publisher-facing performance summaries.</span>
+          <span>Analytics shown here are advertiser-facing performance summaries.</span>
         </div>
       </footer>
     </main>

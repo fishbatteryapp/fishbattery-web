@@ -4,8 +4,8 @@
     <link rel="icon" type="image/png" href="/assets/branding/Fishbattery_Logo_Full.png" sizes="any">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Affiliate Admin - Fishbattery</title>
-    <meta name="description" content="Affiliate approvals and payout operations for Fishbattery." />
+    <title>Admin Dashboard - Fishbattery</title>
+    <meta name="description" content="Universal admin dashboard for Fishbattery affiliates and advertisers." />
     <meta name="robots" content="noindex,nofollow" />
     <link rel="canonical" href="https://fishbattery.app/affiliate-admin.html" />
     <link rel="stylesheet" href="./styles.css" />
@@ -18,7 +18,8 @@
           <a class="brand" href="./index.html">Fishbattery</a>
           <nav class="top-links">
             <a href="./affiliate.html">Affiliate dashboard</a>
-            <a href="./affiliate-admin.html" class="active">Affiliate admin</a>
+            <a href="./ad-dashboard.html">Advertiser dashboard</a>
+            <a href="./affiliate-admin.html" class="active">Admin dashboard</a>
             <a href="./account.html">Account</a>
           </nav>
         </div>
@@ -26,10 +27,10 @@
       </header>
 
       <header class="card ads-hero">
-        <p class="kicker">Affiliate admin</p>
-        <h1>Approvals and payouts</h1>
-        <p class="lead">Review affiliate applications, move ready commissions into approved state, and record payouts with history.</p>
-        <p id="adminNotice" class="hint">Enter your admin key to load affiliate operations.</p>
+        <p class="kicker">Universal admin</p>
+        <h1>Affiliates and advertisers</h1>
+        <p class="lead">Review applications, approve accounts, assign advertiser slots, and handle affiliate payouts from one place.</p>
+        <p id="adminNotice" class="hint">Enter your admin key to load internal operations.</p>
       </header>
 
       <section class="card dashboard-controls">
@@ -44,7 +45,7 @@
         <div class="actions">
           <button id="saveAdminAccess" class="btn btn-primary" type="button">Save access</button>
           <button id="refreshAdminData" class="btn" type="button">Refresh</button>
-          <button id="exportAffiliateCsv" class="btn" type="button">Export CSV</button>
+          <button id="exportAffiliateCsv" class="btn" type="button">Export affiliate CSV</button>
         </div>
       </section>
 
@@ -52,6 +53,10 @@
         <article class="card ads-kpi-card">
           <p class="ads-kpi-label">Affiliates</p>
           <p id="adminKpiAffiliates" class="ads-kpi-value">0</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Advertisers</p>
+          <p id="adminKpiAdvertisers" class="ads-kpi-value">0</p>
         </article>
         <article class="card ads-kpi-card">
           <p class="ads-kpi-label">Ready to review</p>
@@ -64,6 +69,10 @@
         <article class="card ads-kpi-card">
           <p class="ads-kpi-label">Paid total</p>
           <p id="adminKpiPaid" class="ads-kpi-value">USD $0.00</p>
+        </article>
+        <article class="card ads-kpi-card">
+          <p class="ads-kpi-label">Advertiser campaigns</p>
+          <p id="adminKpiAdvertiserCampaigns" class="ads-kpi-value">0</p>
         </article>
       </section>
 
@@ -94,6 +103,44 @@
         </div>
       </section>
 
+      <section class="card stack">
+        <p class="kicker">Advertiser accounts</p>
+        <h2>Approval and slot assignment</h2>
+        <div class="dashboard-controls">
+          <div class="field">
+            <span>Advertiser</span>
+            <select id="advertiserAccountSelect">
+              <option value="">Load advertiser data first</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>Status</span>
+            <select id="advertiserStatusSelect">
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>Budget (EUR)</span>
+            <input id="advertiserBudgetInput" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+          <div class="field">
+            <span>Daily limit (EUR)</span>
+            <input id="advertiserDailyLimitInput" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+        <div>
+          <p class="hint">Assigned ad slots</p>
+          <div id="adminAdvertiserPlacementPicker" class="ads-placement-picker"></div>
+        </div>
+        <div class="actions">
+          <button id="saveAdvertiserConfig" class="btn btn-primary" type="button">Save advertiser settings</button>
+        </div>
+        <p id="advertiserEditorHint" class="hint">Choose an advertiser to assign access, budgets, and allowed placements.</p>
+      </section>
+
       <section class="card">
         <p class="kicker">Affiliate accounts</p>
         <h2>Approvals and balances</h2>
@@ -114,6 +161,50 @@
               </tr>
             </thead>
             <tbody id="affiliateAdminRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <p class="kicker">Advertiser applications</p>
+        <h2>Accounts, requested slots, and budgets</h2>
+        <div class="dashboard-table-wrap">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Advertiser</th>
+                <th>Status</th>
+                <th>Requested slots</th>
+                <th>Assigned slots</th>
+                <th>Campaigns</th>
+                <th>Budget</th>
+                <th>Daily limit</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="advertiserRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <p class="kicker">Advertiser campaign budgets</p>
+        <h2>Per-ad allocation</h2>
+        <div class="dashboard-table-wrap">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Advertiser</th>
+                <th>Status</th>
+                <th>Placements</th>
+                <th>Spent</th>
+                <th>Allocated</th>
+                <th>Remaining</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="advertiserCampaignBudgetRows"></tbody>
           </table>
         </div>
       </section>
@@ -168,12 +259,13 @@
           <div class="legal-links">
             <a href="./index.html">Home</a>
             <a href="./affiliate.html">Affiliate dashboard</a>
+            <a href="./ad-dashboard.html">Advertiser dashboard</a>
             <a href="./affiliate-terms.html">Affiliate terms</a>
           </div>
         </div>
         <div class="legal-copy">
           <span>&copy; Fishbattery</span>
-          <span>Admin payout tools are internal operations only.</span>
+          <span>Admin tools are internal operations only.</span>
         </div>
       </footer>
     </main>
