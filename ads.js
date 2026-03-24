@@ -197,18 +197,18 @@
   function normalizeAd(ad) {
     const idRaw = String(ad?.id || "").trim().toLowerCase();
     const id = /^[a-z0-9][a-z0-9_-]{1,63}$/.test(idRaw) ? idRaw : "your-ad-here";
+    const name = String(ad?.name || "").trim();
     const title = String(ad?.title || "").trim();
     const body = String(ad?.body || "").trim();
     const cta = String(ad?.cta || "Learn more").trim();
     const link = String(ad?.link || "").trim();
-    const media = String(ad?.media || "Sponsored").trim();
     const imageUrl = String(ad?.imageUrl || "").trim();
     const placements = Array.isArray(ad?.placements) ? ad.placements.map((x) => String(x || "").trim()) : [];
     const active = ad?.active !== false;
     const hasRenderableContent = !!(title || body || imageUrl);
 
     if (!active || !hasRenderableContent || !/^https?:\/\//i.test(link)) return null;
-    return { id, title, body, cta, link, media, imageUrl, placements };
+    return { id, name, title, body, cta, link, imageUrl, placements };
   }
 
   // Pick one ad for a given placement.
@@ -227,7 +227,9 @@
       wrap.className = "sponsored-fallback";
       wrap.innerHTML = `
         <div class="sponsored-fallback-inner">
-          <div class="sponsored-fallback-image" aria-hidden="true"></div>
+          <div class="sponsored-fallback-image" hidden>
+            <img class="sponsored-fallback-image-el" alt="" loading="lazy" />
+          </div>
   
           <div class="sponsored-fallback-title"></div>
           <div class="sponsored-fallback-body"></div>
@@ -243,6 +245,7 @@
     const titleEl = wrap.querySelector(".sponsored-fallback-title");
     const bodyEl = wrap.querySelector(".sponsored-fallback-body");
     const imageEl = wrap.querySelector(".sponsored-fallback-image");
+    const imageInnerEl = wrap.querySelector(".sponsored-fallback-image-el");
     const kickerEl = slot.querySelector(".sponsored-kicker");
 
     const cleanTitle = String(ad.title || "")
@@ -282,14 +285,18 @@
         if (target) window.open(target, "_blank", "noopener,noreferrer");
       });
     }
-    if (kickerEl) kickerEl.textContent = ad.media ? `Sponsored • ${ad.media}` : "Sponsored";
-    if (imageEl) {
+    if (kickerEl) {
+      const bannerLabel = String(ad.name || cleanTitle || "").trim();
+      kickerEl.textContent = bannerLabel ? `Sponsored • ${bannerLabel}` : "Sponsored";
+    }
+    if (imageEl && imageInnerEl) {
       if (/^(https?:\/\/|data:image\/)/i.test(ad.imageUrl || "")) {
-        imageEl.style.backgroundImage =
-          `linear-gradient(180deg, rgba(4,10,18,0.08), rgba(4,10,18,0.5)), url("${ad.imageUrl}")`;
+        imageInnerEl.src = String(ad.imageUrl || "");
+        imageEl.hidden = false;
         wrap.classList.add("has-image");
       } else {
-        imageEl.style.backgroundImage = "";
+        imageInnerEl.removeAttribute("src");
+        imageEl.hidden = true;
         wrap.classList.remove("has-image");
       }
     }
