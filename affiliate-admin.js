@@ -39,6 +39,7 @@
     adminCampaignImageUrlInput: $("adminCampaignImageUrlInput"),
     createAdvertiserCampaignBtn: $("createAdvertiserCampaign"),
     adminCampaignCreateHint: $("adminCampaignCreateHint"),
+    adminCampaignCreateStatus: $("adminCampaignCreateStatus"),
     adminKpiAffiliates: $("adminKpiAffiliates"),
     adminKpiAdvertisers: $("adminKpiAdvertisers"),
     adminKpiReady: $("adminKpiReady"),
@@ -58,6 +59,7 @@
   function getStoredAdminKey() { return String(localStorage.getItem("fishbattery.adminApiKey") || "").trim(); }
   function getStoredAdminActor() { return String(localStorage.getItem("fishbattery.adminActor") || "").trim(); }
   function setNotice(message) { if (ui.adminNotice) ui.adminNotice.textContent = String(message || ""); }
+  function setCampaignCreateStatus(message) { if (ui.adminCampaignCreateStatus) ui.adminCampaignCreateStatus.textContent = String(message || ""); }
   function escapeHtml(value) {
     return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
@@ -164,6 +166,7 @@
     const advertiser = state.advertisers.find((item) => String(item.userId) === String(userId));
     if (!advertiser) {
       if (ui.advertiserEditorHint) ui.advertiserEditorHint.textContent = "Choose an advertiser to assign access, budgets, and allowed placements.";
+      setCampaignCreateStatus("Choose an advertiser above before creating a campaign.");
       return;
     }
     if (ui.advertiserAccountSelect) ui.advertiserAccountSelect.value = String(advertiser.userId || "");
@@ -176,6 +179,7 @@
     }
     if (ui.advertiserEditorHint) ui.advertiserEditorHint.textContent = `${advertiser.companyName || advertiser.displayName || "Advertiser"} requested ${placementLabels(advertiser.application?.requestedPlacements)}.`;
     if (ui.adminCampaignCreateHint) ui.adminCampaignCreateHint.textContent = `Creating campaigns for ${advertiser.companyName || advertiser.displayName || "this advertiser"}. They will run across all assigned slots: ${placementLabels(advertiser.allowedPlacements)}.`;
+    setCampaignCreateStatus("");
     void loadAdvertiserCampaignBudgets(userId);
   }
   function renderAffiliates() {
@@ -501,9 +505,14 @@
   });
   ui.createAdvertiserCampaignBtn?.addEventListener("click", async () => {
     const userId = String(ui.advertiserAccountSelect?.value || "").trim();
-    if (!userId) return void setNotice("Choose an advertiser before creating a campaign.");
+    if (!userId) {
+      setNotice("Choose an advertiser before creating a campaign.");
+      setCampaignCreateStatus("Choose an advertiser above before creating a campaign.");
+      return;
+    }
     try {
       setNotice("Creating advertiser campaign...");
+      setCampaignCreateStatus("Creating advertiser campaign...");
       const data = await request(`/v1/admin/advertisers/${encodeURIComponent(userId)}/campaigns`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -527,9 +536,13 @@
       renderAdvertiserCampaignBudgets();
       clearCampaignCreateForm();
       loadAdvertiserIntoEditor(userId);
-      setNotice(`Advertiser campaign created${data?.campaignId ? `: ${data.campaignId}` : "."}`);
+      const successMessage = `Advertiser campaign created${data?.campaignId ? `: ${data.campaignId}` : "."}`;
+      setNotice(successMessage);
+      setCampaignCreateStatus(successMessage);
     } catch (error) {
-      setNotice(`Could not create advertiser campaign: ${String(error?.message || error)}`);
+      const failureMessage = `Could not create advertiser campaign: ${String(error?.message || error)}`;
+      setNotice(failureMessage);
+      setCampaignCreateStatus(failureMessage);
     }
   });
   if (getStoredAdminKey()) void refreshAll();
