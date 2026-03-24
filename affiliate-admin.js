@@ -27,6 +27,18 @@
     adminAdvertiserPlacementPicker: $("adminAdvertiserPlacementPicker"),
     saveAdvertiserConfigBtn: $("saveAdvertiserConfig"),
     advertiserEditorHint: $("advertiserEditorHint"),
+    adminCampaignIdInput: $("adminCampaignIdInput"),
+    adminCampaignStatusSelect: $("adminCampaignStatusSelect"),
+    adminCampaignBudgetAllocationInput: $("adminCampaignBudgetAllocationInput"),
+    adminCampaignMediaInput: $("adminCampaignMediaInput"),
+    adminCampaignNameInput: $("adminCampaignNameInput"),
+    adminCampaignLandingUrlInput: $("adminCampaignLandingUrlInput"),
+    adminCampaignTitleInput: $("adminCampaignTitleInput"),
+    adminCampaignCtaInput: $("adminCampaignCtaInput"),
+    adminCampaignBodyInput: $("adminCampaignBodyInput"),
+    adminCampaignImageUrlInput: $("adminCampaignImageUrlInput"),
+    createAdvertiserCampaignBtn: $("createAdvertiserCampaign"),
+    adminCampaignCreateHint: $("adminCampaignCreateHint"),
     adminKpiAffiliates: $("adminKpiAffiliates"),
     adminKpiAdvertisers: $("adminKpiAdvertisers"),
     adminKpiReady: $("adminKpiReady"),
@@ -140,7 +152,7 @@
       ui.adminAdvertiserPlacementPicker.innerHTML = state.placements.map((item) => `
         <label>
           <input type="checkbox" value="${escapeHtml(item.placement || "")}" data-advertiser-placement />
-          <span>${escapeHtml(item.placement || "")} (${escapeHtml(formatMoneyEur(item.feeEur || 0))})</span>
+          <span>${escapeHtml(item.placement || "")}</span>
         </label>`).join("") || `<p class="hint">No placement inventory found.</p>`;
     }
     if (previous && state.advertisers.some((item) => String(item.userId) === previous)) {
@@ -163,6 +175,7 @@
       for (const input of ui.adminAdvertiserPlacementPicker.querySelectorAll("[data-advertiser-placement]")) input.checked = allowed.has(String(input.value || ""));
     }
     if (ui.advertiserEditorHint) ui.advertiserEditorHint.textContent = `${advertiser.companyName || advertiser.displayName || "Advertiser"} requested ${placementLabels(advertiser.application?.requestedPlacements)}.`;
+    if (ui.adminCampaignCreateHint) ui.adminCampaignCreateHint.textContent = `Creating campaigns for ${advertiser.companyName || advertiser.displayName || "this advertiser"}. They will run across all assigned slots: ${placementLabels(advertiser.allowedPlacements)}.`;
     void loadAdvertiserCampaignBudgets(userId);
   }
   function renderAffiliates() {
@@ -387,6 +400,18 @@
       setNotice(`Could not load advertiser campaigns: ${String(error?.message || error)}`);
     }
   }
+  function clearCampaignCreateForm() {
+    if (ui.adminCampaignIdInput) ui.adminCampaignIdInput.value = "";
+    if (ui.adminCampaignStatusSelect) ui.adminCampaignStatusSelect.value = "review";
+    if (ui.adminCampaignBudgetAllocationInput) ui.adminCampaignBudgetAllocationInput.value = "";
+    if (ui.adminCampaignMediaInput) ui.adminCampaignMediaInput.value = "";
+    if (ui.adminCampaignNameInput) ui.adminCampaignNameInput.value = "";
+    if (ui.adminCampaignLandingUrlInput) ui.adminCampaignLandingUrlInput.value = "";
+    if (ui.adminCampaignTitleInput) ui.adminCampaignTitleInput.value = "";
+    if (ui.adminCampaignCtaInput) ui.adminCampaignCtaInput.value = "";
+    if (ui.adminCampaignBodyInput) ui.adminCampaignBodyInput.value = "";
+    if (ui.adminCampaignImageUrlInput) ui.adminCampaignImageUrlInput.value = "";
+  }
   function toCsv() {
     const rows = [["Affiliate", "Email", "Status", "Code", "Clicks", "Conversions", "Ready USD", "Approved USD", "Paid USD", "Payout Method"]];
     for (const item of state.affiliates) rows.push([String(item.displayName || ""), String(item.email || ""), String(item.status || ""), String(item.affiliateCode || ""), String(Number(item.stats?.clicks || 0)), String(Number(item.stats?.conversions || 0)), (Number(item.stats?.readyCents || 0) / 100).toFixed(2), (Number(item.stats?.approvedCents || 0) / 100).toFixed(2), (Number(item.stats?.paidCents || 0) / 100).toFixed(2), String(payoutMethodLabel(item.payoutMethod))]);
@@ -473,6 +498,39 @@
       state.advertisers = Array.isArray(data?.advertisers) ? data.advertisers : state.advertisers;
       renderKpis(); renderAdvertiserEditor(); renderAdvertisers(); loadAdvertiserIntoEditor(userId); setNotice("Advertiser settings updated.");
     } catch (error) { setNotice(`Could not save advertiser settings: ${String(error?.message || error)}`); }
+  });
+  ui.createAdvertiserCampaignBtn?.addEventListener("click", async () => {
+    const userId = String(ui.advertiserAccountSelect?.value || "").trim();
+    if (!userId) return void setNotice("Choose an advertiser before creating a campaign.");
+    try {
+      setNotice("Creating advertiser campaign...");
+      const data = await request(`/v1/admin/advertisers/${encodeURIComponent(userId)}/campaigns`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          campaignId: String(ui.adminCampaignIdInput?.value || "").trim(),
+          status: String(ui.adminCampaignStatusSelect?.value || "review").trim().toLowerCase(),
+          budgetAllocationEur: ui.adminCampaignBudgetAllocationInput?.value === "" ? null : Number(ui.adminCampaignBudgetAllocationInput?.value || 0),
+          media: String(ui.adminCampaignMediaInput?.value || "").trim(),
+          name: String(ui.adminCampaignNameInput?.value || "").trim(),
+          landingUrl: String(ui.adminCampaignLandingUrlInput?.value || "").trim(),
+          title: String(ui.adminCampaignTitleInput?.value || "").trim(),
+          cta: String(ui.adminCampaignCtaInput?.value || "").trim(),
+          body: String(ui.adminCampaignBodyInput?.value || "").trim(),
+          imageUrl: String(ui.adminCampaignImageUrlInput?.value || "").trim()
+        })
+      });
+      state.advertiserCampaigns = Array.isArray(data?.campaigns) ? data.campaigns : state.advertiserCampaigns;
+      state.advertisers = Array.isArray(data?.advertisers) ? data.advertisers : state.advertisers;
+      renderKpis();
+      renderAdvertisers();
+      renderAdvertiserCampaignBudgets();
+      clearCampaignCreateForm();
+      loadAdvertiserIntoEditor(userId);
+      setNotice(`Advertiser campaign created${data?.campaignId ? `: ${data.campaignId}` : "."}`);
+    } catch (error) {
+      setNotice(`Could not create advertiser campaign: ${String(error?.message || error)}`);
+    }
   });
   if (getStoredAdminKey()) void refreshAll();
   else {

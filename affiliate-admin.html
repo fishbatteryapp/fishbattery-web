@@ -141,6 +141,63 @@
         <p id="advertiserEditorHint" class="hint">Choose an advertiser to assign access, budgets, and allowed placements.</p>
       </section>
 
+      <section class="card stack">
+        <p class="kicker">Create advertiser campaign</p>
+        <h2>Manual campaign creation</h2>
+        <div class="dashboard-controls">
+          <label class="field">
+            <span>Campaign ID</span>
+            <input id="adminCampaignIdInput" type="text" maxlength="64" placeholder="Optional custom id" />
+          </label>
+          <label class="field">
+            <span>Status</span>
+            <select id="adminCampaignStatusSelect">
+              <option value="review">In review</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Budget allocation (EUR)</span>
+            <input id="adminCampaignBudgetAllocationInput" type="number" min="0" step="0.01" placeholder="0.00" />
+          </label>
+          <label class="field">
+            <span>Media label</span>
+            <input id="adminCampaignMediaInput" type="text" maxlength="40" placeholder="Banner, Sponsored, Launcher..." />
+          </label>
+        </div>
+        <div class="ads-form-grid">
+          <label class="field">
+            <span>Campaign name</span>
+            <input id="adminCampaignNameInput" type="text" maxlength="120" placeholder="Homepage spring launch" />
+          </label>
+          <label class="field">
+            <span>Landing URL</span>
+            <input id="adminCampaignLandingUrlInput" type="text" maxlength="300" placeholder="https://..." />
+          </label>
+          <label class="field">
+            <span>Headline</span>
+            <input id="adminCampaignTitleInput" type="text" maxlength="120" placeholder="Headline shown in the ad" />
+          </label>
+          <label class="field">
+            <span>CTA</span>
+            <input id="adminCampaignCtaInput" type="text" maxlength="40" placeholder="Install now" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Body</span>
+          <textarea id="adminCampaignBodyInput" rows="3" maxlength="400" placeholder="Short supporting body copy"></textarea>
+        </label>
+        <label class="field">
+          <span>Image URL</span>
+          <input id="adminCampaignImageUrlInput" type="text" maxlength="300" placeholder="https://... Optional" />
+        </label>
+        <div class="actions">
+          <button id="createAdvertiserCampaign" class="btn btn-primary" type="button">Create campaign for advertiser</button>
+        </div>
+        <p id="adminCampaignCreateHint" class="hint">Select an advertiser above. New campaigns automatically run across every slot assigned to that advertiser account.</p>
+      </section>
+
       <section class="card">
         <p class="kicker">Affiliate accounts</p>
         <h2>Approvals and balances</h2>

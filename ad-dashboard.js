@@ -113,7 +113,7 @@
         <article class="ads-placement-card">
           <h3>${escapeHtml(placementLabel(item.placement))}</h3>
           <p class="hint">Usage-based placement approved manually by Fishbattery.</p>
-          <p class="ads-placement-meta">Placement ID: <code>${escapeHtml(item.placement || "")}</code> • Base fee: ${escapeHtml(formatMoneyEur(item.feeEur || 0))}</p>
+          <p class="ads-placement-meta">Placement ID: <code>${escapeHtml(item.placement || "")}</code></p>
         </article>`).join("");
     }
     if (ui.applicationPlacementPicker) {
@@ -198,16 +198,71 @@
       return `<div class="ads-bar-row"><div class="ads-bar-meta"><strong>${escapeHtml(placementLabel(row?.placement))}</strong><span>${share.toFixed(2)}% share (${formatNumber(impressions)} impressions) | ${formatNumber(clicks)} clicks | ${ctr.toFixed(2)}% CTR</span></div><div class="ads-bar-track"><span class="ads-bar-fill" style="width:${Math.max(8, Math.round(share))}%"></span></div></div>`;
     }).join("");
   }
+  function aggregateCampaignRows(rows) {
+    const grouped = new Map();
+    for (const row of Array.isArray(rows) ? rows : []) {
+      const campaignId = String(row?.campaignId || row?.id || row?.campaignName || "").trim();
+      if (!campaignId) continue;
+      if (!grouped.has(campaignId)) {
+        grouped.set(campaignId, {
+          campaignId,
+          campaignName: String(row?.campaignName || row?.name || "Untitled campaign"),
+          status: String(row?.status || "review"),
+          pricingModel: String(row?.pricingModel || "MIXED").toUpperCase(),
+          impressions: 0,
+          clicks: 0,
+          conversions: 0,
+          revenueEur: 0,
+          slots: []
+        });
+      }
+      const entry = grouped.get(campaignId);
+      const impressions = asFiniteNumber(row?.impressions, 0);
+      const clicks = asFiniteNumber(row?.clicks, 0);
+      const conversions = asFiniteNumber(row?.conversions, 0);
+      const revenueEur = asFiniteNumber(row?.estimatedRevenueEur ?? row?.revenueEur ?? row?.spendEur, 0);
+      entry.impressions += impressions;
+      entry.clicks += clicks;
+      entry.conversions += conversions;
+      entry.revenueEur += revenueEur;
+      entry.slots.push({
+        placement: String(row?.placement || ""),
+        placementLabel: placementLabel(row?.placement || ""),
+        impressions,
+        clicks,
+        ctr: impressions > 0 ? (clicks / impressions) * 100 : 0,
+        conversions,
+        conversionRate: clicks > 0 ? (conversions / clicks) * 100 : 0,
+        revenueEur
+      });
+    }
+    return Array.from(grouped.values()).map((entry) => {
+      entry.slots.sort((a, b) => (b.impressions - a.impressions) || (b.clicks - a.clicks) || a.placementLabel.localeCompare(b.placementLabel));
+      entry.ctr = entry.impressions > 0 ? (entry.clicks / entry.impressions) * 100 : 0;
+      entry.conversionRate = entry.clicks > 0 ? (entry.conversions / entry.clicks) * 100 : 0;
+      entry.averageCpcEur = entry.clicks > 0 ? entry.revenueEur / entry.clicks : 0;
+      return entry;
+    }).sort((a, b) => (b.impressions - a.impressions) || a.campaignName.localeCompare(b.campaignName));
+  }
   function renderCampaignRows(rows) {
-    state.currentCampaignRows = Array.isArray(rows) ? rows : [];
+    state.currentCampaignRows = aggregateCampaignRows(rows);
     if (!ui.campaignRows) return;
-    if (!state.currentCampaignRows.length) return void (ui.campaignRows.innerHTML = `<tr><td colspan="11">No campaign metrics match the selected filters.</td></tr>`);
+    if (!state.currentCampaignRows.length) return void (ui.campaignRows.innerHTML = `<tr><td colspan="10">No campaign metrics match the selected filters.</td></tr>`);
     ui.campaignRows.innerHTML = state.currentCampaignRows.map((row) => `
       <tr>
         <td><strong>${escapeHtml(row?.campaignName || "")}</strong></td>
-        <td>${escapeHtml(placementLabel(row?.placement || ""))}</td>
         <td><span class="status-pill status-${escapeHtml(row?.status || "review")}">${escapeHtml(row?.status || "review")}</span></td>
-        <td>${escapeHtml(String(row?.pricingModel || "MIXED").toUpperCase())}</td>
+        <td class="campaign-performance-cell">
+          <div class="campaign-slot-breakdown">
+            ${Array.isArray(row?.slots) && row.slots.length ? row.slots.map((slot) => `
+              <div class="campaign-slot-item">
+                <strong>${escapeHtml(slot.placementLabel || "")}</strong>
+                <span>${formatNumber(slot.impressions)} imp</span>
+                <span>${formatNumber(slot.clicks)} clicks</span>
+                <span>${slot.ctr.toFixed(2)}% CTR</span>
+              </div>`).join("") : `<span class="hint">No slot data yet.</span>`}
+          </div>
+        </td>
         <td>${formatNumber(row?.impressions || 0)}</td>
         <td>${formatNumber(row?.clicks || 0)}</td>
         <td>${asFiniteNumber(row?.ctr, 0).toFixed(2)}%</td>
@@ -252,7 +307,6 @@
               cta: state.campaignBudgets.find((item) => item.campaignId === campaignId)?.cta || "Learn more",
               landingUrl: state.campaignBudgets.find((item) => item.campaignId === campaignId)?.landingUrl || "https://fishbattery.app",
               imageUrl: state.campaignBudgets.find((item) => item.campaignId === campaignId)?.imageUrl || "",
-              placements: (state.campaignBudgets.find((item) => item.campaignId === campaignId)?.placements || []).map((item) => item.placement),
               budgetAllocationEur: Number(input.value || 0)
             })
           });
@@ -287,8 +341,18 @@
     window.location.href = url;
   }
   function downloadCsv() {
-    const rows = [["Campaign", "Placement", "Status", "Impressions", "Clicks", "CTR", "Conversions", "ConvRate", "Revenue EUR"]];
-    for (const row of state.currentCampaignRows) rows.push([row?.campaignName || "", row?.placement || "", row?.status || "", String(row?.impressions || 0), String(row?.clicks || 0), String(asFiniteNumber(row?.ctr, 0).toFixed(2)), String(row?.conversions || 0), String(asFiniteNumber(row?.conversionRate, 0).toFixed(2)), String(asFiniteNumber(row?.estimatedRevenueEur ?? row?.revenueEur ?? 0).toFixed(2))]);
+    const rows = [["Campaign", "Status", "Slot performance", "Impressions", "Clicks", "CTR", "Conversions", "ConvRate", "Revenue EUR"]];
+    for (const row of state.currentCampaignRows) rows.push([
+      row?.campaignName || "",
+      row?.status || "",
+      (Array.isArray(row?.slots) ? row.slots : []).map((slot) => `${slot.placementLabel}: ${formatNumber(slot.impressions)} imp, ${formatNumber(slot.clicks)} clicks, ${slot.ctr.toFixed(2)}% CTR`).join(" | "),
+      String(row?.impressions || 0),
+      String(row?.clicks || 0),
+      String(asFiniteNumber(row?.ctr, 0).toFixed(2)),
+      String(row?.conversions || 0),
+      String(asFiniteNumber(row?.conversionRate, 0).toFixed(2)),
+      String(asFiniteNumber(row?.estimatedRevenueEur ?? row?.revenueEur ?? row?.spendEur, 0).toFixed(2))
+    ]);
     const csv = `\uFEFF${rows.map((cols) => cols.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\r\n")}`;
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
